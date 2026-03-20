@@ -19,7 +19,7 @@ def parse_analysis(text):
             result["bull_case"] = line.split(":", 1)[1].strip()
         elif line.startswith("BEAR CASE:"):
             result["bear_case"] = line.split(":", 1)[1].strip()
-        elif line.startswith("RISK:"):
+        elif line.startswith("RISK LEVEL:"):
             result["risk_level"] = line.split(":", 1)[1].strip()
     return result
 
