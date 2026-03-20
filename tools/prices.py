@@ -1,4 +1,17 @@
+import httpx
+from config import ALPHA_VANTAGE_API_KEY
+
 BASE_URL = "https://www.alphavantage.co/query"
 
-# TODO: get_price() — fetch current price and % change for a ticker
-# TODO: get_earnings_date() — fetch next earnings date for a ticker
+def get_price(ticker):
+    response = httpx.get(BASE_URL, params={
+        "function": "GLOBAL_QUOTE",
+        "symbol": ticker,
+        "apikey": ALPHA_VANTAGE_API_KEY
+    })
+    data = response.json().get("Global Quote", {})
+    return {
+        "ticker": ticker,
+        "price": data.get("price"),
+        "change_percent": data.get("change_percent")
+    }
