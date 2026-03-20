@@ -40,3 +40,28 @@ def create_research_note(ticker_page_id, ticker, date, bull_case, bear_case, ris
             "Full Analysis": {"rich_text": [{"text": {"content": full_analysis}}]}
         }
     )
+
+def create_earnings_entry(ticker_page_id, company, ticker, report_date, expected_eps):
+    notion.pages.create(
+        parent={"database_id": EARNINGS_CALENDAR_DB_ID},
+        properties={
+            "Company": {"title": [{"text": {"content": company}}]},
+            "Ticker": {"relation": [{"id": ticker_page_id}]},
+            "Report Date": {"date": {"start": report_date}},
+            "Status": {"select": {"name": "Upcoming"}},
+            "Expected EPS": {"number": float(expected_eps) if expected_eps else None}
+        }
+    )
+
+def create_daily_digest(date, mood, top_movers, biggest_risks, full_briefing, action_items):
+    notion.pages.create(
+        parent={"database_id": DAILY_DIGEST_DB_ID},
+        properties={
+            "Date": {"title": [{"text": {"content": date}}]},
+            "Market Mood": {"select": {"name": mood}},
+            "Top Movers": {"rich_text": [{"text": {"content": top_movers}}]},
+            "Biggest Risks": {"rich_text": [{"text": {"content": biggest_risks}}]},
+            "Full Briefing": {"rich_text": [{"text": {"content": full_briefing}}]},
+            "Action Items": {"rich_text": [{"text": {"content": action_items}}]}
+        }
+    )
