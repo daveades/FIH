@@ -1,5 +1,5 @@
 from notion_client import Client
-from config import NOTION_API_KEY, WATCHLIST_DB_ID, RESEARCH_NOTES_DB_ID
+from config import NOTION_API_KEY, WATCHLIST_DB_ID, RESEARCH_NOTES_DB_ID, EARNINGS_CALENDAR_DB_ID, DAILY_DIGEST_DB_ID
 
 notion = Client(auth=NOTION_API_KEY)
 
