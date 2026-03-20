@@ -1,6 +1,42 @@
-# TODO: get_watchlist() — return list of tickers from Notion watchlist database
-# TODO: update_watchlist_row() — write price, sentiment, summary back to a ticker's row
-# TODO: create_research_note() — add a new page to research notes database
-# TODO: get_upcoming_earnings() — pull earnings entries that are coming up soon
-# TODO: create_earnings_entry() — add a new row to earnings calendar
-# TODO: create_daily_digest() — write the daily digest page to Notion
+from notion_client import Client
+from config import NOTION_API_KEY, WATCHLIST_DB_ID, RESEARCH_NOTES_DB_ID
+
+notion = Client(auth=NOTION_API_KEY)
+
+def get_watchlist():
+    response = notion.databases.query(database_id=WATCHLIST_DB_ID)
+    tickers = []
+    for page in response["results"]:
+        props = page["properties"]
+        tickers.append({
+            "id": page["id"],
+            "ticker": props["Ticker"]["title"][0]["text"]["content"],
+            "company": props["Company Name"]["rich_text"][0]["text"]["content"]
+        })
+    return tickers
+
+def update_watchlist_row(page_id, price, change_percent, sentiment, score, summary):
+    notion.pages.update(
+        page_id=page_id,
+        properties={
+            "Current Price": {"number": float(price)},
+            "Price Change %": {"number": float(change_percent.replace("%", ""))},
+            "Sentiment Label": {"select": {"name": sentiment}},
+            "Sentiment Score": {"number": float(score)},
+            "Last AI Summary": {"rich_text": [{"text": {"content": summary}}]}
+        }
+    )
+
+def create_research_note(ticker_page_id, ticker, date, bull_case, bear_case, risk_level, full_analysis):
+    notion.pages.create(
+        parent={"database_id": RESEARCH_NOTES_DB_ID},
+        properties={
+            "Title": {"title": [{"text": {"content": f"{ticker} — {date}"}}]},
+            "Ticker": {"relation": [{"id": ticker_page_id}]},
+            "Date": {"date": {"start": date}},
+            "Bull Case": {"rich_text": [{"text": {"content": bull_case}}]},
+            "Bear Case": {"rich_text": [{"text": {"content": bear_case}}]},
+            "Risk Level": {"select": {"name": risk_level}},
+            "Full Analysis": {"rich_text": [{"text": {"content": full_analysis}}]}
+        }
+    )
