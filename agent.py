@@ -57,7 +57,8 @@ def analyse_ticker(ticker, price_data, news):
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}]
         )
-        result = parse_analysis(response.content[0].text)
+        raw = response.content[0].text
+        result = parse_analysis(raw)
         if result:
             result["price"] = price_data.get("price")
             result["change_percent"] = price_data.get("change_percent")
@@ -79,7 +80,7 @@ def generate_earnings_brief(ticker, company, report_date, analysis):
     for line in text.splitlines():
         if "WATCH CLOSELY:" in line:
             watch_closely = "true" in line.lower()
-        if "report date" in line.lower() or (ticker.lower() in line.lower() and "brief" in line.lower()):
+        if "report date" in line.lower() or "watch closely" in line.lower() or (ticker.lower() in line.lower() and "brief" in line.lower()):
             continue
         clean_lines.append(line)
     brief = clean_text("\n".join(clean_lines))
