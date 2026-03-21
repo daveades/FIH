@@ -2,7 +2,7 @@ import anthropic
 from config import ANTHROPIC_API_KEY, MODEL
 from tools.prices import get_price
 from tools.news import get_news
-from prompts import ticker_analysis_prompt
+from prompts import ticker_analysis_prompt, earnings_brief_prompt, daily_digest_prompt
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -40,4 +40,39 @@ def analyse_ticker(ticker):
         messages=[{"role": "user", "content": prompt}]
     )
 
-    return parse_analysis(response.content[0].text)
+    result = parse_analysis(response.content[0].text)
+    result["price"] = price_data["price"]
+    result["change_percent"] = price_data["change_percent"]
+    result["ticker"] = ticker
+    return result
+
+def generate_earnings_brief(ticker, company, report_date, analysis):
+    prompt = earnings_brief_prompt(ticker, company, report_date, analysis)
+    response = client.messages.create(
+        model=MODEL,
+        max_tokens=512,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response.content[0].text
+
+def generate_daily_digest(analyses):
+    prompt = daily_digest_prompt(analyses)
+    response = client.messages.create(
+        model=MODEL,
+        max_tokens=1024,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    text = response.content[0].text
+    result = {}
+    for line in text.splitlines():
+        if line.startswith("MARKET MOOD:"):
+            result["mood"] = line.split(":", 1)[1].strip()
+        elif line.startswith("TOP MOVERS:"):
+            result["top_movers"] = line.split(":", 1)[1].strip()
+        elif line.startswith("BIGGEST RISKS:"):
+            result["biggest_risks"] = line.split(":", 1)[1].strip()
+        elif line.startswith("ACTION ITEMS:"):
+            result["action_items"] = line.split(":", 1)[1].strip()
+        elif line.startswith("FULL BRIEFING:"):
+            result["full_briefing"] = line.split(":", 1)[1].strip()
+    return result
