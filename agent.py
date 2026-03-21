@@ -7,6 +7,23 @@ client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 REQUIRED_KEYS = {"sentiment", "score", "summary", "bull_case", "bear_case", "risk_level"}
 
+def clean_text(text):
+    lines = text.splitlines()
+    cleaned = []
+    for line in lines:
+        line = re.sub(r'\*+', '', line).strip()
+        if not line:
+            cleaned.append('')
+            continue
+        if line.startswith('#'):
+            line = re.sub(r'^#+\s*', '', line).upper()
+        elif line.endswith(':') and len(line) < 30:
+            line = line.upper()
+        cleaned.append(line)
+    result = '\n'.join(cleaned)
+    result = re.sub(r'(?<=[^:\n]) - (?=\S)', '\n- ', result)
+    return result.strip()
+
 def parse_analysis(text):
     result = {}
     for line in text.splitlines():
@@ -61,12 +78,11 @@ def generate_earnings_brief(ticker, company, report_date, analysis):
     clean_lines = []
     for line in text.splitlines():
         if "WATCH CLOSELY:" in line:
-            value = re.sub(r'\*+', '', line.split(":", 1)[1]).strip().lower()
-            watch_closely = value == "true"
+            watch_closely = "true" in line.lower()
         if "report date" in line.lower() or (ticker.lower() in line.lower() and "brief" in line.lower()):
             continue
         clean_lines.append(line)
-    brief = "\n".join(clean_lines).strip()
+    brief = clean_text("\n".join(clean_lines))
     return {"brief": brief, "watch_closely": watch_closely}
 
 def generate_earnings_summary(ticker, company, report_date, news):
@@ -76,7 +92,7 @@ def generate_earnings_summary(ticker, company, report_date, news):
         max_tokens=512,
         messages=[{"role": "user", "content": prompt}]
     )
-    return response.content[0].text
+    return clean_text(response.content[0].text)
 
 def generate_daily_digest(analyses):
     prompt = daily_digest_prompt(analyses)
