@@ -1,3 +1,4 @@
+import time
 import httpx
 from config import ALPHA_VANTAGE_API_KEY
 
@@ -16,6 +17,15 @@ def get_price(ticker):
         "change_percent": data.get("10. change percent")
     }
 
+def get_prices_for_watchlist(watchlist):
+    results = {}
+    for i, stock in enumerate(watchlist):
+        ticker = stock["ticker"]
+        results[ticker] = get_price(ticker)
+        if i < len(watchlist) - 1:
+            time.sleep(15)
+    return results
+
 def get_earnings_date(ticker):
     response = httpx.get(BASE_URL, params={
         "function": "EARNINGS_CALENDAR",
@@ -28,6 +38,10 @@ def get_earnings_date(ticker):
         return None
     for line in lines[1:]:
         parts = line.split(",")
-        if parts[0] == ticker:
-            return {"report_date": parts[2], "expected_eps": parts[3]}
+        if len(parts) >= 5 and parts[0] == ticker:
+            try:
+                eps = float(parts[4])
+            except (ValueError, TypeError):
+                eps = None
+            return {"report_date": parts[2], "expected_eps": eps}
     return None

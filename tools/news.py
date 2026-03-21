@@ -1,3 +1,4 @@
+import time
 import anthropic
 from config import ANTHROPIC_API_KEY, MODEL
 
@@ -6,16 +7,24 @@ client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 def get_news(ticker):
     response = client.messages.create(
         model=MODEL,
-        max_tokens=1024,
+        max_tokens=500,
         tools=[{"type": "web_search_20250305", "name": "web_search"}],
         messages=[{
             "role": "user",
-            "content": f"Find the latest news about {ticker} stock from the past 24 hours. Summarise the key points briefly."
+            "content": f"Search for latest stock news about {ticker} today. Reply with exactly:\nHEADLINES: top 2 headlines\nSUMMARY: one sentence summary\nSENTIMENT: Bullish, Bearish, or Neutral"
         }]
     )
+    return " ".join(
+        block.text for block in response.content
+        if getattr(block, "type", "") == "text" and hasattr(block, "text")
+    ).strip()
 
-    for block in response.content:
-        if block.type == "text":
-            return block.text
-
-    return ""
+def get_news_for_watchlist(watchlist):
+    results = {}
+    for i, stock in enumerate(watchlist):
+        ticker = stock["ticker"]
+        results[ticker] = get_news(ticker)
+        if i < len(watchlist) - 1:
+            print(f"waiting 65 seconds before next news search...")
+            time.sleep(65)
+    return results

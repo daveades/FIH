@@ -19,8 +19,8 @@ def update_watchlist_row(page_id, price, change_percent, sentiment, score, summa
     notion.pages.update(
         page_id=page_id,
         properties={
-            "Current Price": {"number": float(price)},
-            "Price Change %": {"number": float(change_percent.replace("%", ""))},
+            "Current Price": {"number": float(price) if price else None},
+            "Price Change %": {"number": float(change_percent.replace("%", "")) if change_percent else None},
             "Sentiment Label": {"select": {"name": sentiment}},
             "Sentiment Score": {"number": float(score)},
             "Last AI Summary": {"rich_text": [{"text": {"content": summary}}]}

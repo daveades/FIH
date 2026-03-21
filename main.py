@@ -1,6 +1,8 @@
+import time
 from datetime import date
 from tools.notion import get_watchlist, update_watchlist_row, create_research_note, create_earnings_entry, create_daily_digest
-from tools.prices import get_earnings_date
+from tools.prices import get_prices_for_watchlist, get_earnings_date
+from tools.news import get_news_for_watchlist
 from agent import analyse_ticker, generate_earnings_brief, generate_daily_digest
 import logger
 
@@ -10,13 +12,23 @@ def run():
     logger.section("starting run")
     logger.info(f"found {len(watchlist)} tickers")
 
+    logger.section("fetching prices")
+    prices = get_prices_for_watchlist(watchlist)
+
+    logger.section("fetching news")
+    news = get_news_for_watchlist(watchlist)
+
+    logger.section("waiting before analysis")
+    time.sleep(65)
+
+    logger.section("running analysis")
     analyses = []
 
-    for stock in watchlist:
+    for i, stock in enumerate(watchlist):
         ticker = stock["ticker"]
         logger.info(f"analysing {ticker}...")
 
-        result = analyse_ticker(ticker)
+        result = analyse_ticker(ticker, prices.get(ticker, {}), news.get(ticker, ""))
         analyses.append(result)
 
         update_watchlist_row(
@@ -56,6 +68,9 @@ def run():
             logger.success(f"earnings brief done for {ticker}")
 
         logger.success(f"done with {ticker}")
+
+        if i < len(watchlist) - 1:
+            time.sleep(15)
 
     logger.section("generating daily digest")
     digest = generate_daily_digest(analyses)

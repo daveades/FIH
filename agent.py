@@ -1,10 +1,10 @@
 import anthropic
 from config import ANTHROPIC_API_KEY, MODEL
-from tools.prices import get_price
-from tools.news import get_news
 from prompts import ticker_analysis_prompt, earnings_brief_prompt, daily_digest_prompt
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+
+REQUIRED_KEYS = {"sentiment", "score", "summary", "bull_case", "bear_case", "risk_level"}
 
 def parse_analysis(text):
     result = {}
@@ -21,30 +21,30 @@ def parse_analysis(text):
             result["bear_case"] = line.split(":", 1)[1].strip()
         elif line.startswith("RISK LEVEL:"):
             result["risk_level"] = line.split(":", 1)[1].strip()
-    return result
+    return result if REQUIRED_KEYS.issubset(result) else None
 
-def analyse_ticker(ticker):
-    price_data = get_price(ticker)
-    news = get_news(ticker)
-
+def analyse_ticker(ticker, price_data, news):
     prompt = ticker_analysis_prompt(
         ticker,
-        price_data["price"],
-        price_data["change_percent"],
+        price_data.get("price"),
+        price_data.get("change_percent"),
         news
     )
 
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=1024,
-        messages=[{"role": "user", "content": prompt}]
-    )
+    for _ in range(3):
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        result = parse_analysis(response.content[0].text)
+        if result:
+            result["price"] = price_data.get("price")
+            result["change_percent"] = price_data.get("change_percent")
+            result["ticker"] = ticker
+            return result
 
-    result = parse_analysis(response.content[0].text)
-    result["price"] = price_data["price"]
-    result["change_percent"] = price_data["change_percent"]
-    result["ticker"] = ticker
-    return result
+    raise ValueError(f"Claude did not return a valid analysis for {ticker} after 3 attempts")
 
 def generate_earnings_brief(ticker, company, report_date, analysis):
     prompt = earnings_brief_prompt(ticker, company, report_date, analysis)
