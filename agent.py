@@ -22,7 +22,6 @@ def clean_text(text):
         cleaned.append(line)
     result = '\n'.join(cleaned)
     result = re.sub(r'(?<=[^:\n]) - (?=\S)', '\n- ', result)
-    result = re.sub(r'(?<=[^:\n]) • (?=\S)', '\n• ', result)
     return result.strip()
 
 def parse_analysis(text):
