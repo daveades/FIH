@@ -39,8 +39,8 @@ def parse_analysis(text):
             result["bear_case"] = line.split(":", 1)[1].strip()
         elif line.startswith("RISK LEVEL:"):
             result["risk_level"] = line.split(":", 1)[1].strip()
-        elif line.startswith("ALERT:"):
-            result["alert"] = line.split(":", 1)[1].strip().lower() == "true"
+        elif "ALERT:" in line:
+            result["alert"] = "true" in line.lower()
     return result if REQUIRED_KEYS.issubset(result) else None
 
 def analyse_ticker(ticker, price_data, news):
