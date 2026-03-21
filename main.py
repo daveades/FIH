@@ -67,7 +67,7 @@ def run():
         )
 
         earnings = earnings_data.get(ticker)
-        if earnings and earnings["report_date"] > today and not earnings_entry_exists(ticker):
+        if earnings and earnings["report_date"] > today and not earnings_entry_exists(stock["id"]):
             brief = generate_earnings_brief(
                 ticker,
                 stock["company"],

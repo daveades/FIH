@@ -30,20 +30,18 @@ def update_watchlist_row(page_id, price, change_percent, sentiment, score, summa
     notion.pages.update(page_id=page_id, properties=properties)
 
 def create_research_note(ticker_page_id, ticker, date, news_url, key_signals, bull_case, bear_case, risk_level, full_analysis):
-    notion.pages.create(
-        parent={"database_id": RESEARCH_NOTES_DB_ID},
-        properties={
-            "Title": {"title": [{"text": {"content": f"{ticker} — {date}"}}]},
-            "Ticker": {"relation": [{"id": ticker_page_id}]},
-            "Date": {"date": {"start": date}},
-            "News Sources": {"url": news_url if news_url and news_url.startswith("http") else None},
-            "Key Signals": {"rich_text": [{"text": {"content": key_signals[:2000]}}]},
-            "Bull Case": {"rich_text": [{"text": {"content": bull_case[:2000]}}]},
-            "Bear Case": {"rich_text": [{"text": {"content": bear_case[:2000]}}]},
-            "Risk Level": {"select": {"name": risk_level}},
-            "Full Analysis": {"rich_text": [{"text": {"content": full_analysis[:2000]}}]}
-        }
-    )
+    properties = {
+        "Title": {"title": [{"text": {"content": f"{ticker} — {date}"}}]},
+        "Ticker": {"relation": [{"id": ticker_page_id}]},
+        "Date": {"date": {"start": date}},
+        "News Sources": {"url": news_url if news_url and news_url.startswith("http") else None},
+        "Key Signals": {"rich_text": [{"text": {"content": key_signals[:2000]}}]},
+        "Bull Case": {"rich_text": [{"text": {"content": bull_case[:2000]}}]},
+        "Bear Case": {"rich_text": [{"text": {"content": bear_case[:2000]}}]},
+        "Risk Level": {"select": {"name": risk_level}},
+        "Full Analysis": {"rich_text": [{"text": {"content": full_analysis[:2000]}}]}
+    }
+    notion.pages.create(parent={"database_id": RESEARCH_NOTES_DB_ID}, properties=properties)
 
 def get_unreported_past_earnings():
     today = date.today().isoformat()
@@ -73,13 +71,13 @@ def mark_as_reported(page_id, summary):
         }
     )
 
-def earnings_entry_exists(ticker):
+def earnings_entry_exists(ticker_page_id):
     today = date.today().isoformat()
     response = notion.databases.query(
         database_id=EARNINGS_CALENDAR_DB_ID,
         filter={
             "and": [
-                {"property": "Company", "title": {"contains": ticker}},
+                {"property": "Ticker", "relation": {"contains": ticker_page_id}},
                 {"property": "Report Date", "date": {"on_or_after": today}},
                 {"property": "Status", "select": {"equals": "Upcoming"}}
             ]
