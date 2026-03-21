@@ -25,7 +25,7 @@ def parse_news(ticker, raw):
     result = {"ticker": ticker, "summary": "", "source_url": ""}
     patterns = {
         "summary": r"SUMMARY:\s*(.*?)(?=SOURCE:|SENTIMENT:|$)",
-        "source_url": r"SOURCE:\s*(https?://\S+)",
+        "source_url": r"SOURCE:.*?(https?://\S+)",
     }
     for key, pattern in patterns.items():
         match = re.search(pattern, raw, re.DOTALL | re.IGNORECASE)
