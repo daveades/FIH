@@ -17,14 +17,16 @@ def get_price(ticker):
         "change_percent": data.get("10. change percent")
     }
 
-def get_prices_for_watchlist(watchlist):
-    results = {}
+def get_market_data_for_watchlist(watchlist):
+    prices = {}
+    earnings = {}
     for i, stock in enumerate(watchlist):
         ticker = stock["ticker"]
-        results[ticker] = get_price(ticker)
+        prices[ticker] = get_price(ticker)
+        earnings[ticker] = get_earnings_date(ticker)
         if i < len(watchlist) - 1:
             time.sleep(15)
-    return results
+    return prices, earnings
 
 def get_earnings_date(ticker):
     response = httpx.get(BASE_URL, params={
