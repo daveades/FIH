@@ -58,8 +58,10 @@ def analyse_ticker(ticker, price_data, news):
             messages=[{"role": "user", "content": prompt}]
         )
         raw = response.content[0].text
+        print(f"[DEBUG {ticker}] claude response:\n{raw}\n")
         result = parse_analysis(raw)
         if result:
+            print(f"[DEBUG {ticker}] alert={result.get('alert')}")
             result["price"] = price_data.get("price")
             result["change_percent"] = price_data.get("change_percent")
             result["ticker"] = ticker
