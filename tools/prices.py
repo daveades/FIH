@@ -23,6 +23,7 @@ def get_market_data_for_watchlist(watchlist):
     for i, stock in enumerate(watchlist):
         ticker = stock["ticker"]
         prices[ticker] = get_price(ticker)
+        time.sleep(13)
         earnings[ticker] = get_earnings_date(ticker)
         if i < len(watchlist) - 1:
             time.sleep(15)
