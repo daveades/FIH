@@ -1,6 +1,6 @@
 import time
 from datetime import date
-from tools.notion import get_watchlist, update_watchlist_row, create_research_note, create_earnings_entry, create_daily_digest, earnings_entry_exists, get_unreported_past_earnings, mark_as_reported
+from tools.notion import get_watchlist, update_watchlist_row, create_research_note, create_earnings_entry, create_daily_digest, earnings_entry_exists, get_unreported_past_earnings, mark_as_reported, get_earnings_this_week
 from tools.prices import get_market_data_for_watchlist
 from tools.news import get_news_for_watchlist
 from agent import analyse_ticker, generate_earnings_brief, generate_earnings_summary, generate_daily_digest
@@ -94,6 +94,7 @@ def run():
 
     logger.section("generating daily digest")
     digest = generate_daily_digest(analyses)
+    earnings_ids = get_earnings_this_week()
     create_daily_digest(
         today,
         digest["mood"],
@@ -101,7 +102,8 @@ def run():
         digest["biggest_risks"],
         digest["full_briefing"],
         digest["action_items"],
-        flagged_ids
+        flagged_ids,
+        earnings_ids
     )
     logger.success("all done")
 

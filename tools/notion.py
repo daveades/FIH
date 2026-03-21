@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from notion_client import Client
 from config import NOTION_API_KEY, WATCHLIST_DB_ID, RESEARCH_NOTES_DB_ID, EARNINGS_CALENDAR_DB_ID, DAILY_DIGEST_DB_ID
 
@@ -45,27 +45,88 @@ def create_research_note(ticker_page_id, ticker, date, news_url, key_signals, bu
         }
     )
 
-def create_earnings_entry(ticker_page_id, company, ticker, report_date, expected_eps):
-    notion.pages.create(
-        parent={"database_id": EARNINGS_CALENDAR_DB_ID},
+def get_unreported_past_earnings():
+    today = date.today().isoformat()
+    response = notion.databases.query(
+        database_id=EARNINGS_CALENDAR_DB_ID,
+        filter={
+            "and": [
+                {"property": "Report Date", "date": {"before": today}},
+                {"property": "Status", "select": {"equals": "Upcoming"}}
+            ]
+        }
+    )
+    results = []
+    for page in response["results"]:
+        props = page["properties"]
+        company = props["Company"]["title"][0]["text"]["content"] if props["Company"]["title"] else ""
+        report_date = props["Report Date"]["date"]["start"] if props["Report Date"]["date"] else ""
+        results.append({"id": page["id"], "company": company, "report_date": report_date})
+    return results
+
+def mark_as_reported(page_id, summary):
+    notion.pages.update(
+        page_id=page_id,
         properties={
-            "Company": {"title": [{"text": {"content": company}}]},
-            "Ticker": {"relation": [{"id": ticker_page_id}]},
-            "Report Date": {"date": {"start": report_date}},
-            "Status": {"select": {"name": "Upcoming"}},
-            "Expected EPS": {"number": float(expected_eps) if expected_eps else None}
+            "Status": {"select": {"name": "Reported"}},
+            "Earnings Summary": {"rich_text": [{"text": {"content": summary[:2000]}}]}
         }
     )
 
-def create_daily_digest(date, mood, top_movers, biggest_risks, full_briefing, action_items):
+def earnings_entry_exists(ticker):
+    today = date.today().isoformat()
+    response = notion.databases.query(
+        database_id=EARNINGS_CALENDAR_DB_ID,
+        filter={
+            "and": [
+                {"property": "Company", "title": {"contains": ticker}},
+                {"property": "Report Date", "date": {"on_or_after": today}},
+                {"property": "Status", "select": {"equals": "Upcoming"}}
+            ]
+        }
+    )
+    return len(response["results"]) > 0
+
+def create_earnings_entry(ticker_page_id, company, ticker, report_date, expected_eps, brief="", watch_closely=False):
+    properties = {
+        "Company": {"title": [{"text": {"content": company}}]},
+        "Ticker": {"relation": [{"id": ticker_page_id}]},
+        "Report Date": {"date": {"start": report_date}},
+        "Status": {"select": {"name": "Upcoming"}},
+        "Watch Closely": {"checkbox": watch_closely}
+    }
+    if expected_eps is not None:
+        properties["Expected EPS"] = {"number": expected_eps}
+    if brief:
+        properties["Pre Earnings Brief"] = {"rich_text": [{"text": {"content": brief[:2000]}}]}
+    notion.pages.create(parent={"database_id": EARNINGS_CALENDAR_DB_ID}, properties=properties)
+
+def get_earnings_this_week():
+    today = date.today().isoformat()
+    week_end = (date.today() + timedelta(days=7)).isoformat()
+    response = notion.databases.query(
+        database_id=EARNINGS_CALENDAR_DB_ID,
+        filter={
+            "and": [
+                {"property": "Report Date", "date": {"on_or_after": today}},
+                {"property": "Report Date", "date": {"before": week_end}},
+                {"property": "Status", "select": {"equals": "Upcoming"}}
+            ]
+        }
+    )
+    return [page["id"] for page in response["results"]]
+
+def create_daily_digest(date, mood, top_movers, biggest_risks, full_briefing, action_items, flagged_ids=None, earnings_ids=None):
     notion.pages.create(
         parent={"database_id": DAILY_DIGEST_DB_ID},
         properties={
             "Date": {"title": [{"text": {"content": date}}]},
             "Market Mood": {"select": {"name": mood}},
-            "Top Movers": {"rich_text": [{"text": {"content": top_movers}}]},
-            "Biggest Risks Today": {"rich_text": [{"text": {"content": biggest_risks}}]},
-            "Full Briefing": {"rich_text": [{"text": {"content": full_briefing}}]},
-            "Action Items": {"rich_text": [{"text": {"content": action_items}}]}
+            "Top Movers": {"rich_text": [{"text": {"content": top_movers[:2000]}}]},
+            "Biggest Risks Today": {"rich_text": [{"text": {"content": biggest_risks[:2000]}}]},
+            "Full Briefing": {"rich_text": [{"text": {"content": full_briefing[:2000]}}]},
+            "Action Items": {"rich_text": [{"text": {"content": action_items[:2000]}}]},
+            "Tickers Flagged": {"relation": [{"id": tid} for tid in (flagged_ids or [])]},
+            "Earnings This Week": {"relation": [{"id": eid} for eid in (earnings_ids or [])]}
         }
     )
