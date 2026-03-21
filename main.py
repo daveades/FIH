@@ -2,17 +2,19 @@ from datetime import date
 from tools.notion import get_watchlist, update_watchlist_row, create_research_note, create_earnings_entry, create_daily_digest
 from tools.prices import get_earnings_date
 from agent import analyse_ticker, generate_earnings_brief, generate_daily_digest
+import logger
 
 def run():
     today = str(date.today())
     watchlist = get_watchlist()
-    print(f"found {len(watchlist)} tickers")
+    logger.section("starting run")
+    logger.info(f"found {len(watchlist)} tickers")
 
     analyses = []
 
     for stock in watchlist:
         ticker = stock["ticker"]
-        print(f"analysing {ticker}...")
+        logger.info(f"analysing {ticker}...")
 
         result = analyse_ticker(ticker)
         analyses.append(result)
@@ -38,7 +40,7 @@ def run():
 
         earnings = get_earnings_date(ticker)
         if earnings:
-            brief = generate_earnings_brief(
+            generate_earnings_brief(
                 ticker,
                 stock["company"],
                 earnings["report_date"],
@@ -51,11 +53,11 @@ def run():
                 earnings["report_date"],
                 earnings["expected_eps"]
             )
-            print(f"earnings brief done for {ticker}")
+            logger.success(f"earnings brief done for {ticker}")
 
-        print(f"done with {ticker}")
+        logger.success(f"done with {ticker}")
 
-    print("generating daily digest...")
+    logger.section("generating daily digest")
     digest = generate_daily_digest(analyses)
     create_daily_digest(
         today,
@@ -65,7 +67,7 @@ def run():
         digest["full_briefing"],
         digest["action_items"]
     )
-    print("all done")
+    logger.success("all done")
 
 if __name__ == "__main__":
     run()

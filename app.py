@@ -1,12 +1,10 @@
 import threading
-import queue
 from flask import Flask, render_template, Response, jsonify
 from tools.notion import get_watchlist
+from logger import log_queue
 import main as pipeline
 
 app = Flask(__name__)
-
-log_queue = queue.Queue()
 
 @app.route("/")
 def index():
