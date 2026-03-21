@@ -64,15 +64,37 @@ def generate_daily_digest(analyses):
     )
     text = response.content[0].text
     result = {}
+    current_key = None
+    current_value = []
+
     for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
         if line.startswith("MARKET MOOD:"):
-            result["mood"] = line.split(":", 1)[1].strip()
+            current_key = "mood"
+            current_value = [line.split(":", 1)[1].strip()]
         elif line.startswith("TOP MOVERS:"):
-            result["top_movers"] = line.split(":", 1)[1].strip()
+            if current_key: result[current_key] = " ".join(current_value)
+            current_key = "top_movers"
+            current_value = [line.split(":", 1)[1].strip()]
         elif line.startswith("BIGGEST RISKS:"):
-            result["biggest_risks"] = line.split(":", 1)[1].strip()
+            if current_key: result[current_key] = " ".join(current_value)
+            current_key = "biggest_risks"
+            current_value = [line.split(":", 1)[1].strip()]
         elif line.startswith("ACTION ITEMS:"):
-            result["action_items"] = line.split(":", 1)[1].strip()
+            if current_key: result[current_key] = " ".join(current_value)
+            current_key = "action_items"
+            current_value = [line.split(":", 1)[1].strip()]
         elif line.startswith("FULL BRIEFING:"):
-            result["full_briefing"] = line.split(":", 1)[1].strip()
+            if current_key: result[current_key] = " ".join(current_value)
+            current_key = "full_briefing"
+            current_value = [line.split(":", 1)[1].strip()]
+        else:
+            if current_key:
+                current_value.append(line)
+
+    if current_key:
+        result[current_key] = " ".join(current_value)
+
     return result

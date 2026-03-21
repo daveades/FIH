@@ -20,11 +20,14 @@ def get_news(ticker):
     ).strip()
 
 def get_news_for_watchlist(watchlist):
+    total = len(watchlist)
+    print(f"fetching news for {total} tickers (~{total + (total - 1)} mins total)")
     results = {}
     for i, stock in enumerate(watchlist):
         ticker = stock["ticker"]
+        print(f"news {i + 1}/{total}: {ticker}")
         results[ticker] = get_news(ticker)
-        if i < len(watchlist) - 1:
-            print(f"waiting 65 seconds before next news search...")
+        if i < total - 1:
+            print(f"waiting 65 seconds...")
             time.sleep(65)
     return results

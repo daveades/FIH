@@ -60,7 +60,7 @@ def create_daily_digest(date, mood, top_movers, biggest_risks, full_briefing, ac
             "Date": {"title": [{"text": {"content": date}}]},
             "Market Mood": {"select": {"name": mood}},
             "Top Movers": {"rich_text": [{"text": {"content": top_movers}}]},
-            "Biggest Risks": {"rich_text": [{"text": {"content": biggest_risks}}]},
+            "Biggest Risks Today": {"rich_text": [{"text": {"content": biggest_risks}}]},
             "Full Briefing": {"rich_text": [{"text": {"content": full_briefing}}]},
             "Action Items": {"rich_text": [{"text": {"content": action_items}}]}
         }
