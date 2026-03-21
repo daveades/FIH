@@ -1,6 +1,7 @@
+import re
 import anthropic
 from config import ANTHROPIC_API_KEY, MODEL
-from prompts import ticker_analysis_prompt, earnings_brief_prompt, daily_digest_prompt
+from prompts import ticker_analysis_prompt, earnings_brief_prompt, earnings_summary_prompt, daily_digest_prompt
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
@@ -50,6 +51,26 @@ def analyse_ticker(ticker, price_data, news):
 
 def generate_earnings_brief(ticker, company, report_date, analysis):
     prompt = earnings_brief_prompt(ticker, company, report_date, analysis)
+    response = client.messages.create(
+        model=MODEL,
+        max_tokens=512,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    text = response.content[0].text
+    watch_closely = False
+    clean_lines = []
+    for line in text.splitlines():
+        if "WATCH CLOSELY:" in line:
+            value = re.sub(r'\*+', '', line.split(":", 1)[1]).strip().lower()
+            watch_closely = value == "true"
+        if "report date" in line.lower() or (ticker.lower() in line.lower() and "brief" in line.lower()):
+            continue
+        clean_lines.append(line)
+    brief = "\n".join(clean_lines).strip()
+    return {"brief": brief, "watch_closely": watch_closely}
+
+def generate_earnings_summary(ticker, company, report_date, news):
+    prompt = earnings_summary_prompt(ticker, company, report_date, news)
     response = client.messages.create(
         model=MODEL,
         max_tokens=512,
