@@ -41,7 +41,19 @@ def create_research_note(ticker_page_id, ticker, date, news_url, key_signals, bu
         "Risk Level": {"select": {"name": risk_level}},
         "Full Analysis": {"rich_text": [{"text": {"content": full_analysis[:2000]}}]}
     }
-    notion.pages.create(parent={"database_id": RESEARCH_NOTES_DB_ID}, properties=properties)
+    existing = notion.databases.query(
+        database_id=RESEARCH_NOTES_DB_ID,
+        filter={
+            "and": [
+                {"property": "Ticker", "relation": {"contains": ticker_page_id}},
+                {"property": "Date", "date": {"equals": date}}
+            ]
+        }
+    )
+    if existing["results"]:
+        notion.pages.update(page_id=existing["results"][0]["id"], properties=properties)
+    else:
+        notion.pages.create(parent={"database_id": RESEARCH_NOTES_DB_ID}, properties=properties)
 
 def get_unreported_past_earnings():
     today = date.today().isoformat()
