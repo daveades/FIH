@@ -28,7 +28,8 @@ def run():
         ticker = stock["ticker"]
         logger.info(f"analysing {ticker}...")
 
-        result = analyse_ticker(ticker, prices.get(ticker, {}), news.get(ticker, ""))
+        news_data = news.get(ticker, {})
+        result = analyse_ticker(ticker, prices.get(ticker, {}), news_data.get("summary", ""))
         analyses.append(result)
 
         update_watchlist_row(
@@ -37,13 +38,16 @@ def run():
             result["change_percent"],
             result["sentiment"],
             result["score"],
-            result["summary"]
+            result["summary"],
+            result.get("alert", False)
         )
 
         create_research_note(
             stock["id"],
             ticker,
             today,
+            news_data.get("source_url", ""),
+            result["summary"],
             result["bull_case"],
             result["bear_case"],
             result["risk_level"],

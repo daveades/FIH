@@ -21,6 +21,8 @@ def parse_analysis(text):
             result["bear_case"] = line.split(":", 1)[1].strip()
         elif line.startswith("RISK LEVEL:"):
             result["risk_level"] = line.split(":", 1)[1].strip()
+        elif line.startswith("ALERT:"):
+            result["alert"] = line.split(":", 1)[1].strip().lower() == "true"
     return result if REQUIRED_KEYS.issubset(result) else None
 
 def analyse_ticker(ticker, price_data, news):
@@ -67,26 +69,27 @@ def generate_daily_digest(analyses):
     current_key = None
     current_value = []
 
+    import re
     for line in text.splitlines():
-        line = line.strip()
+        line = re.sub(r'\*+', '', line).strip()
         if not line:
             continue
-        if line.startswith("MARKET MOOD:"):
+        if "MARKET MOOD:" in line:
             current_key = "mood"
             current_value = [line.split(":", 1)[1].strip()]
-        elif line.startswith("TOP MOVERS:"):
+        elif "TOP MOVERS:" in line:
             if current_key: result[current_key] = " ".join(current_value)
             current_key = "top_movers"
             current_value = [line.split(":", 1)[1].strip()]
-        elif line.startswith("BIGGEST RISKS:"):
+        elif "BIGGEST RISKS:" in line:
             if current_key: result[current_key] = " ".join(current_value)
             current_key = "biggest_risks"
             current_value = [line.split(":", 1)[1].strip()]
-        elif line.startswith("ACTION ITEMS:"):
+        elif "ACTION ITEMS:" in line:
             if current_key: result[current_key] = " ".join(current_value)
             current_key = "action_items"
             current_value = [line.split(":", 1)[1].strip()]
-        elif line.startswith("FULL BRIEFING:"):
+        elif "FULL BRIEFING:" in line:
             if current_key: result[current_key] = " ".join(current_value)
             current_key = "full_briefing"
             current_value = [line.split(":", 1)[1].strip()]

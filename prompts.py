@@ -7,6 +7,7 @@ SUMMARY: <2-3 sentence plain english summary>
 BULL CASE: <one sentence>
 BEAR CASE: <one sentence>
 RISK LEVEL: <Low/Medium/High>
+ALERT: <true if this stock needs immediate attention, false otherwise>
 
 Stock: {ticker}
 Current Price: {price}

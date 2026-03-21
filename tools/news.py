@@ -11,13 +11,27 @@ def get_news(ticker):
         tools=[{"type": "web_search_20250305", "name": "web_search"}],
         messages=[{
             "role": "user",
-            "content": f"Search for latest stock news about {ticker} today. Reply with exactly:\nHEADLINES: top 2 headlines\nSUMMARY: one sentence summary\nSENTIMENT: Bullish, Bearish, or Neutral"
+            "content": f"Search for latest stock news about {ticker} today. Reply with exactly:\nHEADLINES: top 2 headlines\nSUMMARY: one sentence summary\nSOURCE: one url\nSENTIMENT: Bullish, Bearish, or Neutral"
         }]
     )
-    return " ".join(
+    raw = " ".join(
         block.text for block in response.content
         if getattr(block, "type", "") == "text" and hasattr(block, "text")
     ).strip()
+    return parse_news(ticker, raw)
+
+def parse_news(ticker, raw):
+    import re
+    result = {"ticker": ticker, "summary": "", "source_url": ""}
+    patterns = {
+        "summary": r"SUMMARY:\s*(.*?)(?=SOURCE:|SENTIMENT:|$)",
+        "source_url": r"SOURCE:\s*(https?://\S+)",
+    }
+    for key, pattern in patterns.items():
+        match = re.search(pattern, raw, re.DOTALL | re.IGNORECASE)
+        if match:
+            result[key] = match.group(1).strip()
+    return result
 
 def get_news_for_watchlist(watchlist):
     total = len(watchlist)

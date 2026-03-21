@@ -1,3 +1,4 @@
+from datetime import date
 from notion_client import Client
 from config import NOTION_API_KEY, WATCHLIST_DB_ID, RESEARCH_NOTES_DB_ID, EARNINGS_CALENDAR_DB_ID, DAILY_DIGEST_DB_ID
 
@@ -15,29 +16,32 @@ def get_watchlist():
         })
     return tickers
 
-def update_watchlist_row(page_id, price, change_percent, sentiment, score, summary):
-    notion.pages.update(
-        page_id=page_id,
-        properties={
-            "Current Price": {"number": float(price) if price else None},
-            "Price Change %": {"number": float(change_percent.replace("%", "")) if change_percent else None},
-            "Sentiment Label": {"select": {"name": sentiment}},
-            "Sentiment Score": {"number": float(score)},
-            "Last AI Summary": {"rich_text": [{"text": {"content": summary}}]}
-        }
-    )
+def update_watchlist_row(page_id, price, change_percent, sentiment, score, summary, alert=False):
+    properties = {
+        "Sentiment Label": {"select": {"name": sentiment}},
+        "Sentiment Score": {"number": float(score)},
+        "Last AI Summary": {"rich_text": [{"text": {"content": summary[:2000]}}]},
+        "Last Updated": {"date": {"start": date.today().isoformat()}},
+        "Alert Flag": {"checkbox": alert}
+    }
+    if price:
+        properties["Current Price"] = {"number": float(price)}
+        properties["Price Change %"] = {"number": float(change_percent.replace("%", "")) if change_percent else None}
+    notion.pages.update(page_id=page_id, properties=properties)
 
-def create_research_note(ticker_page_id, ticker, date, bull_case, bear_case, risk_level, full_analysis):
+def create_research_note(ticker_page_id, ticker, date, news_url, key_signals, bull_case, bear_case, risk_level, full_analysis):
     notion.pages.create(
         parent={"database_id": RESEARCH_NOTES_DB_ID},
         properties={
             "Title": {"title": [{"text": {"content": f"{ticker} — {date}"}}]},
             "Ticker": {"relation": [{"id": ticker_page_id}]},
             "Date": {"date": {"start": date}},
-            "Bull Case": {"rich_text": [{"text": {"content": bull_case}}]},
-            "Bear Case": {"rich_text": [{"text": {"content": bear_case}}]},
+            "News Sources": {"url": news_url if news_url and news_url.startswith("http") else None},
+            "Key Signals": {"rich_text": [{"text": {"content": key_signals[:2000]}}]},
+            "Bull Case": {"rich_text": [{"text": {"content": bull_case[:2000]}}]},
+            "Bear Case": {"rich_text": [{"text": {"content": bear_case[:2000]}}]},
             "Risk Level": {"select": {"name": risk_level}},
-            "Full Analysis": {"rich_text": [{"text": {"content": full_analysis}}]}
+            "Full Analysis": {"rich_text": [{"text": {"content": full_analysis[:2000]}}]}
         }
     )
 
