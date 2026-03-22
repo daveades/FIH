@@ -34,13 +34,15 @@ def update_watchlist_row(page_id, price, change_percent, sentiment, score, summa
         properties["Price Change %"] = {"number": float(change_percent.replace("%", "")) if change_percent else None}
     notion.pages.update(page_id=page_id, properties=properties)
 
-def create_research_note(ticker_page_id, ticker, timestamp, date, news_url, key_signals, bull_case, bear_case, risk_level, full_analysis):
+def create_research_note(ticker_page_id, ticker, date, news_url, key_signals, bull_case, bear_case, risk_level, full_analysis):
+    ts = now_ts()
+    time_label = datetime.now().strftime("%H:%M")
     notion.pages.create(
         parent={"database_id": RESEARCH_NOTES_DB_ID},
         properties={
-            "Title": {"title": [{"text": {"content": f"{ticker} — {timestamp}"}}]},
+            "Title": {"title": [{"text": {"content": f"{ticker} — {time_label}"}}]},
             "Ticker": {"relation": [{"id": ticker_page_id}]},
-            "Date": {"date": {"start": timestamp}},
+            "Date": {"date": {"start": ts}},
             "News Sources": {"url": news_url if news_url and news_url.startswith("http") else None},
             "Key Signals": {"rich_text": [{"text": {"content": key_signals[:2000]}}]},
             "Bull Case": {"rich_text": [{"text": {"content": bull_case[:2000]}}]},
