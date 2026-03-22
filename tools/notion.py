@@ -36,11 +36,10 @@ def update_watchlist_row(page_id, price, change_percent, sentiment, score, summa
 
 def create_research_note(ticker_page_id, ticker, date, news_url, key_signals, bull_case, bear_case, risk_level, full_analysis):
     ts = now_ts()
-    time_label = datetime.now().strftime("%H:%M")
     notion.pages.create(
         parent={"database_id": RESEARCH_NOTES_DB_ID},
         properties={
-            "Title": {"title": [{"text": {"content": f"{ticker} — {time_label}"}}]},
+            "Title": {"title": [{"text": {"content": ticker}}]},
             "Ticker": {"relation": [{"id": ticker_page_id}]},
             "Date": {"date": {"start": ts}},
             "News Sources": {"url": news_url if news_url and news_url.startswith("http") else None},
