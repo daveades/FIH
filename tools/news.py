@@ -1,3 +1,4 @@
+import re
 import time
 import anthropic
 from config import ANTHROPIC_API_KEY, MODEL
@@ -21,7 +22,6 @@ def get_news(ticker):
     return parse_news(ticker, raw)
 
 def parse_news(ticker, raw):
-    import re
     result = {"ticker": ticker, "summary": "", "source_url": ""}
     patterns = {
         "summary": r"SUMMARY:\s*(.*?)(?=SOURCE:|SENTIMENT:|$)",

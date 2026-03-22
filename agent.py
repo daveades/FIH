@@ -107,7 +107,6 @@ def generate_daily_digest(analyses):
     current_key = None
     current_value = []
 
-    import re
     for line in text.splitlines():
         line = re.sub(r'\*+', '', line).strip()
         if not line:
