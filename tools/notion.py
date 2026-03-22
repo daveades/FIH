@@ -142,5 +142,5 @@ def create_daily_digest(date, mood, top_movers, biggest_risks, full_briefing, ac
     else:
         notion.pages.create(
             parent={"database_id": DAILY_DIGEST_DB_ID},
-            properties={"Date": {"title": [{"text": {"content": now_ts()}}]}, **update_properties}
+            properties={"Date": {"title": [{"text": {"content": date}}]}, **update_properties}
         )
