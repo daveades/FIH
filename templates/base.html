@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FIH{% endblock %}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, sans-serif; background: #0f0f0f; color: #e0e0e0; min-height: 100vh; }
+        a { color: #7c9cff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .container { max-width: 480px; margin: 80px auto; padding: 0 20px; }
+        .card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 32px; }
+        h1 { font-size: 1.4rem; margin-bottom: 24px; color: #fff; }
+        .field { margin-bottom: 16px; }
+        label { display: block; font-size: 0.85rem; color: #999; margin-bottom: 6px; }
+        input { width: 100%; padding: 10px 12px; background: #111; border: 1px solid #333; border-radius: 6px; color: #e0e0e0; font-size: 0.95rem; }
+        input:focus { outline: none; border-color: #7c9cff; }
+        button { width: 100%; padding: 10px; background: #7c9cff; color: #000; border: none; border-radius: 6px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 8px; }
+        button:hover { background: #9db3ff; }
+        .error { color: #ff6b6b; font-size: 0.85rem; margin-bottom: 16px; }
+        .footer-link { text-align: center; margin-top: 20px; font-size: 0.85rem; color: #666; }
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 32px; border-bottom: 1px solid #1e1e1e; }
+        nav .brand { font-weight: 700; color: #fff; font-size: 1rem; }
+        nav .nav-links { display: flex; gap: 20px; font-size: 0.85rem; }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    {% block body %}{% endblock %}
+</body>
+</html>

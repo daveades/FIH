@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Login — FIH{% endblock %}
+{% block body %}
+<div class="container">
+    <div class="card">
+        <h1>Sign in</h1>
+        {% if error %}<p class="error">{{ error }}</p>{% endif %}
+        <form method="POST">
+            <div class="field">
+                <label>Email</label>
+                <input type="email" name="email" required autofocus>
+            </div>
+            <div class="field">
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </div>
+            <button type="submit">Sign in</button>
+        </form>
+    </div>
+    <p class="footer-link">No account? <a href="/register">Create one</a></p>
+</div>
+{% endblock %}

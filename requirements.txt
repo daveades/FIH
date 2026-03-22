@@ -2,3 +2,6 @@ anthropic
 notion-client
 python-dotenv
 httpx
+flask
+psycopg2-binary
+werkzeug
