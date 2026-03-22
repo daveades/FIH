@@ -1,8 +1,13 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from notion_client import Client
 from config import NOTION_API_KEY, WATCHLIST_DB_ID, RESEARCH_NOTES_DB_ID, EARNINGS_CALENDAR_DB_ID, DAILY_DIGEST_DB_ID
 
 notion = Client(auth=NOTION_API_KEY)
+
+def now_ts():
+    n = datetime.now().astimezone()
+    offset = n.strftime("%z")
+    return n.strftime("%Y-%m-%dT%H:%M:%S") + offset[:3] + ":" + offset[3:]
 
 def get_watchlist():
     response = notion.databases.query(database_id=WATCHLIST_DB_ID)
@@ -21,7 +26,7 @@ def update_watchlist_row(page_id, price, change_percent, sentiment, score, summa
         "Sentiment Label": {"select": {"name": sentiment}},
         "Sentiment Score": {"number": float(score)},
         "Last AI Summary": {"rich_text": [{"text": {"content": summary[:2000]}}]},
-        "Last Updated": {"date": {"start": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")}},
+        "Last Updated": {"date": {"start": now_ts()}},
         "Alert Flag": {"checkbox": alert}
     }
     if price:
@@ -117,22 +122,24 @@ def get_earnings_this_week():
     return [page["id"] for page in response["results"]]
 
 def create_daily_digest(date, mood, top_movers, biggest_risks, full_briefing, action_items, flagged_ids=None, earnings_ids=None):
-    properties = {
-        "Date": {"title": [{"text": {"content": date}}]},
+    update_properties = {
         "Market Mood": {"select": {"name": mood}},
         "Top Movers": {"rich_text": [{"text": {"content": top_movers[:2000]}}]},
         "Biggest Risks Today": {"rich_text": [{"text": {"content": biggest_risks[:2000]}}]},
         "Full Briefing": {"rich_text": [{"text": {"content": full_briefing[:2000]}}]},
         "Action Items": {"rich_text": [{"text": {"content": action_items[:2000]}}]},
-        "Last Updated": {"date": {"start": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")}},
+        "Last Updated": {"date": {"start": now_ts()}},
         "Tickers Flagged": {"relation": [{"id": tid} for tid in (flagged_ids or [])]},
         "Earnings This Week": {"relation": [{"id": eid} for eid in (earnings_ids or [])]}
     }
     existing = notion.databases.query(
         database_id=DAILY_DIGEST_DB_ID,
-        filter={"property": "Date", "title": {"equals": date}}
+        filter={"property": "Date", "title": {"contains": date}}
     )
     if existing["results"]:
-        notion.pages.update(page_id=existing["results"][0]["id"], properties=properties)
+        notion.pages.update(page_id=existing["results"][0]["id"], properties=update_properties)
     else:
-        notion.pages.create(parent={"database_id": DAILY_DIGEST_DB_ID}, properties=properties)
+        notion.pages.create(
+            parent={"database_id": DAILY_DIGEST_DB_ID},
+            properties={"Date": {"title": [{"text": {"content": now_ts()}}]}, **update_properties}
+        )

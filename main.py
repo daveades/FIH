@@ -8,7 +8,7 @@ import logger
 
 def run():
     today = str(date.today())
-    now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
     watchlist = get_watchlist()
     logger.section("starting run")
     logger.info(f"found {len(watchlist)} tickers")
