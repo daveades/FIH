@@ -36,6 +36,11 @@
 
       const source = new EventSource("/api/logs");
       source.onmessage = (e) => {
+        if (e.data === "__done__") {
+          btn.disabled = false;
+          source.close();
+          return;
+        }
         log.textContent += e.data + "\n";
         log.scrollTop = log.scrollHeight;
       };
