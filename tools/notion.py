@@ -29,17 +29,19 @@ def update_watchlist_row(page_id, price, change_percent, sentiment, score, summa
         properties["Price Change %"] = {"number": float(change_percent.replace("%", "")) if change_percent else None}
     notion.pages.update(page_id=page_id, properties=properties)
 
-def create_research_note(ticker_page_id, ticker, date, news_url, key_signals, bull_case, bear_case, risk_level, full_analysis):
+def create_research_note(ticker_page_id, ticker, date, news_url, key_signals, bull_case, bear_case, risk_level, full_analysis, recap=""):
     properties = {
         "Title": {"title": [{"text": {"content": f"{ticker} — {date}"}}]},
         "Ticker": {"relation": [{"id": ticker_page_id}]},
         "Date": {"date": {"start": date}},
+        "Last Updated": {"date": {"start": date}},
         "News Sources": {"url": news_url if news_url and news_url.startswith("http") else None},
         "Key Signals": {"rich_text": [{"text": {"content": key_signals[:2000]}}]},
         "Bull Case": {"rich_text": [{"text": {"content": bull_case[:2000]}}]},
         "Bear Case": {"rich_text": [{"text": {"content": bear_case[:2000]}}]},
         "Risk Level": {"select": {"name": risk_level}},
-        "Full Analysis": {"rich_text": [{"text": {"content": full_analysis[:2000]}}]}
+        "Full Analysis": {"rich_text": [{"text": {"content": full_analysis[:2000]}}]},
+        "Recap": {"rich_text": [{"text": {"content": recap[:2000]}}]}
     }
     existing = notion.databases.query(
         database_id=RESEARCH_NOTES_DB_ID,
@@ -51,6 +53,16 @@ def create_research_note(ticker_page_id, ticker, date, news_url, key_signals, bu
         }
     )
     if existing["results"]:
+        prev_props = existing["results"][0]["properties"]
+        prev_risk = prev_props["Risk Level"]["select"]["name"] if prev_props["Risk Level"]["select"] else ""
+        prev_analysis = prev_props["Full Analysis"]["rich_text"][0]["text"]["content"] if prev_props["Full Analysis"]["rich_text"] else ""
+        if prev_risk and prev_risk != risk_level:
+            recap = f"Risk level changed: {prev_risk} → {risk_level}\n"
+        elif prev_risk:
+            recap = f"Risk level unchanged: {risk_level}\n"
+        if prev_analysis:
+            recap += f"\nPrevious analysis:\n{prev_analysis[:600]}"
+        properties["Recap"] = {"rich_text": [{"text": {"content": recap[:2000]}}]}
         notion.pages.update(page_id=existing["results"][0]["id"], properties=properties)
     else:
         notion.pages.create(parent={"database_id": RESEARCH_NOTES_DB_ID}, properties=properties)
@@ -127,16 +139,22 @@ def get_earnings_this_week():
     return [page["id"] for page in response["results"]]
 
 def create_daily_digest(date, mood, top_movers, biggest_risks, full_briefing, action_items, flagged_ids=None, earnings_ids=None):
-    notion.pages.create(
-        parent={"database_id": DAILY_DIGEST_DB_ID},
-        properties={
-            "Date": {"title": [{"text": {"content": date}}]},
-            "Market Mood": {"select": {"name": mood}},
-            "Top Movers": {"rich_text": [{"text": {"content": top_movers[:2000]}}]},
-            "Biggest Risks Today": {"rich_text": [{"text": {"content": biggest_risks[:2000]}}]},
-            "Full Briefing": {"rich_text": [{"text": {"content": full_briefing[:2000]}}]},
-            "Action Items": {"rich_text": [{"text": {"content": action_items[:2000]}}]},
-            "Tickers Flagged": {"relation": [{"id": tid} for tid in (flagged_ids or [])]},
-            "Earnings This Week": {"relation": [{"id": eid} for eid in (earnings_ids or [])]}
-        }
+    properties = {
+        "Date": {"title": [{"text": {"content": date}}]},
+        "Market Mood": {"select": {"name": mood}},
+        "Top Movers": {"rich_text": [{"text": {"content": top_movers[:2000]}}]},
+        "Biggest Risks Today": {"rich_text": [{"text": {"content": biggest_risks[:2000]}}]},
+        "Full Briefing": {"rich_text": [{"text": {"content": full_briefing[:2000]}}]},
+        "Action Items": {"rich_text": [{"text": {"content": action_items[:2000]}}]},
+        "Last Updated": {"date": {"start": date}},
+        "Tickers Flagged": {"relation": [{"id": tid} for tid in (flagged_ids or [])]},
+        "Earnings This Week": {"relation": [{"id": eid} for eid in (earnings_ids or [])]}
+    }
+    existing = notion.databases.query(
+        database_id=DAILY_DIGEST_DB_ID,
+        filter={"property": "Date", "title": {"equals": date}}
     )
+    if existing["results"]:
+        notion.pages.update(page_id=existing["results"][0]["id"], properties=properties)
+    else:
+        notion.pages.create(parent={"database_id": DAILY_DIGEST_DB_ID}, properties=properties)
