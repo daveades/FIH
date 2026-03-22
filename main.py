@@ -1,5 +1,5 @@
 import time
-from datetime import date
+from datetime import date, datetime
 from tools.notion import get_watchlist, update_watchlist_row, create_research_note, create_earnings_entry, create_daily_digest, earnings_entry_exists, get_unreported_past_earnings, mark_as_reported, get_earnings_this_week
 from tools.prices import get_market_data_for_watchlist
 from tools.news import get_news_for_watchlist
@@ -8,6 +8,7 @@ import logger
 
 def run():
     today = str(date.today())
+    now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     watchlist = get_watchlist()
     logger.section("starting run")
     logger.info(f"found {len(watchlist)} tickers")
@@ -57,6 +58,7 @@ def run():
         create_research_note(
             stock["id"],
             ticker,
+            now,
             today,
             news_data.get("source_url", ""),
             result["summary"],
