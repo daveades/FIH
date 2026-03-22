@@ -1,6 +1,4 @@
 anthropic
 notion-client
-flask
 python-dotenv
 httpx
-schedule
