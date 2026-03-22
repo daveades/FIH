@@ -3,8 +3,8 @@ from datetime import date
 from tools.notion import get_watchlist, update_watchlist_row, create_research_note, create_earnings_entry, create_daily_digest, earnings_entry_exists, get_unreported_past_earnings, mark_as_reported, get_earnings_this_week
 from tools.prices import get_market_data_for_watchlist
 from tools.news import get_news_for_watchlist
-from agent import analyse_ticker, generate_earnings_brief, generate_earnings_summary, generate_daily_digest
-import logger
+from core.agent import analyse_ticker, generate_earnings_brief, generate_earnings_summary, generate_daily_digest
+import core.logger as logger
 
 def run():
     today = str(date.today())

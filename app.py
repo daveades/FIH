@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-from db import init_db, get_user_by_id
-from auth import register, login
+from web.db import init_db, get_user_by_id
+from web.auth import register, login
 
 app = Flask(__name__)
 app.secret_key = __import__("os").getenv("SECRET_KEY", "dev")

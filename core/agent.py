@@ -1,7 +1,7 @@
 import re
 import anthropic
 from config import ANTHROPIC_API_KEY, MODEL
-from prompts import ticker_analysis_prompt, earnings_brief_prompt, earnings_summary_prompt, daily_digest_prompt
+from core.prompts import ticker_analysis_prompt, earnings_brief_prompt, earnings_summary_prompt, daily_digest_prompt
 
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 

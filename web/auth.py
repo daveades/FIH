@@ -1,5 +1,5 @@
 from werkzeug.security import generate_password_hash, check_password_hash
-from db import get_user_by_email, create_user
+from web.db import get_user_by_email, create_user
 
 def register(email, password):
     if get_user_by_email(email):
