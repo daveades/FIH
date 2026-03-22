@@ -29,7 +29,23 @@ Write a short pre-earnings brief using this format:
 WHAT TO WATCH: <one sentence on the key thing to look for>
 EXPECTATIONS: <one sentence on what the market expects>
 RISK IF MISS: <one sentence on downside if they disappoint>
-RISK IF BEAT: <one sentence on upside if they surprise>"""
+RISK IF BEAT: <one sentence on upside if they surprise>
+WATCH CLOSELY: <true if this is a high-importance report that could move the market, false otherwise>"""
+
+
+def earnings_summary_prompt(ticker, company, report_date, news):
+    return f"""You are a financial analyst writing a post-earnings summary.
+
+Company: {company} ({ticker})
+Report Date: {report_date}
+News After Earnings:
+{news}
+
+Write a brief post-earnings summary using this format:
+
+RESULT: <Beat/Miss/In-Line>
+SUMMARY: <2-3 sentences on what happened — EPS, revenue, guidance, market reaction>
+OUTLOOK: <one sentence on what this means going forward>"""
 
 
 def daily_digest_prompt(analyses):
