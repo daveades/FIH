@@ -1,5 +1,23 @@
 {% extends "base.html" %}
 {% block title %}Dashboard — FIH{% endblock %}
+{% block head %}
+<style>
+    .main { max-width: 860px; margin: 40px auto; padding: 0 20px; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+    .top-bar h1 { font-size: 1.3rem; color: #fff; }
+    #run-btn { padding: 9px 20px; background: #7c9cff; color: #000; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; width: auto; margin-top: 0; }
+    #run-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+    .log-box { background: #111; border: 1px solid #222; border-radius: 8px; padding: 20px; font-family: monospace; font-size: 0.82rem; line-height: 1.7; height: 420px; overflow-y: auto; color: #aaa; }
+    .log-box .info  { color: #aaa; }
+    .log-box .done  { color: #4caf82; }
+    .log-box .error { color: #ff6b6b; }
+    .log-box .section { color: #7c9cff; }
+    .badge { display: inline-block; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 10px; }
+    .badge.ok { background: #1a3a2a; color: #4caf82; }
+    .badge.missing { background: #2a1a1a; color: #ff6b6b; }
+    .status-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 0.85rem; color: #666; }
+</style>
+{% endblock %}
 {% block body %}
 <nav>
     <span class="brand">FIH</span>
@@ -8,8 +26,68 @@
         <a href="/logout">Logout</a>
     </div>
 </nav>
-<div class="container" style="max-width: 800px; margin-top: 40px;">
-    <h1 style="margin-bottom: 24px;">Dashboard</h1>
-    <p style="color: #666;">Nothing here yet — connect your API keys in <a href="/settings">settings</a> to get started.</p>
+<div class="main">
+    <div class="top-bar">
+        <h1>Dashboard
+            {% if keys_ok %}
+                <span class="badge ok">ready</span>
+            {% else %}
+                <span class="badge missing">setup required</span>
+            {% endif %}
+        </h1>
+        <button id="run-btn" {% if not keys_ok %}disabled title="Add your API keys in Settings first"{% endif %}>Run now</button>
+    </div>
+
+    {% if not keys_ok %}
+    <p style="color: #666; font-size: 0.9rem; margin-bottom: 24px;">
+        Add your API keys in <a href="/settings">Settings</a> to run the analysis.
+    </p>
+    {% endif %}
+
+    <div class="log-box" id="log-box">
+        <span style="color: #444;">Logs will appear here when you run the analysis.</span>
+    </div>
 </div>
+
+<script>
+    const btn = document.getElementById('run-btn');
+    const box = document.getElementById('log-box');
+    let source = null;
+
+    function appendLog(line) {
+        const el = document.createElement('div');
+        if (line.startsWith('[DONE]')) el.className = 'done';
+        else if (line.startsWith('[ERROR]')) el.className = 'error';
+        else if (line.startsWith('\n---') || line.startsWith('---')) el.className = 'section';
+        else el.className = 'info';
+        el.textContent = line;
+        box.appendChild(el);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    btn.addEventListener('click', () => {
+        box.innerHTML = '';
+        btn.disabled = true;
+        btn.textContent = 'Running...';
+
+        fetch('/run', { method: 'POST' });
+
+        if (source) source.close();
+        source = new EventSource('/api/logs');
+        source.onmessage = (e) => {
+            if (e.data === '__done__') {
+                source.close();
+                btn.disabled = false;
+                btn.textContent = 'Run now';
+            } else {
+                appendLog(e.data);
+            }
+        };
+        source.onerror = () => {
+            source.close();
+            btn.disabled = false;
+            btn.textContent = 'Run now';
+        };
+    });
+</script>
 {% endblock %}

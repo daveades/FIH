@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Settings — FIH{% endblock %}
+{% block body %}
+<nav>
+    <span class="brand">FIH</span>
+    <div class="nav-links">
+        <a href="/">Dashboard</a>
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+<div class="container" style="max-width: 600px; margin-top: 40px;">
+    <div class="card">
+        <h1>Settings</h1>
+        {% if saved %}<p style="color: #4caf82; font-size: 0.85rem; margin-bottom: 16px;">Saved.</p>{% endif %}
+        {% if error %}<p class="error">{{ error }}</p>{% endif %}
+        <form method="POST">
+            <p style="color: #666; font-size: 0.85rem; margin-bottom: 20px;">API Keys</p>
+            <div class="field">
+                <label>Anthropic API Key</label>
+                <input type="password" name="anthropic_api_key" placeholder="{{ '••••••' if user.anthropic_api_key else 'sk-ant-...' }}">
+            </div>
+            <div class="field">
+                <label>Notion API Key</label>
+                <input type="password" name="notion_api_key" placeholder="{{ '••••••' if user.notion_api_key else 'secret_...' }}">
+            </div>
+            <div class="field">
+                <label>Alpha Vantage API Key</label>
+                <input type="password" name="alpha_vantage_api_key" placeholder="{{ '••••••' if user.alpha_vantage_api_key else 'Your key' }}">
+            </div>
+
+            <p style="color: #666; font-size: 0.85rem; margin: 24px 0 20px;">Notion Database IDs</p>
+            <div class="field">
+                <label>Watchlist DB</label>
+                <input type="text" name="watchlist_db_id" value="{{ user.watchlist_db_id or '' }}" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+            </div>
+            <div class="field">
+                <label>Research Notes DB</label>
+                <input type="text" name="research_notes_db_id" value="{{ user.research_notes_db_id or '' }}" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+            </div>
+            <div class="field">
+                <label>Earnings Calendar DB</label>
+                <input type="text" name="earnings_calendar_db_id" value="{{ user.earnings_calendar_db_id or '' }}" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+            </div>
+            <div class="field">
+                <label>Daily Digest DB</label>
+                <input type="text" name="daily_digest_db_id" value="{{ user.daily_digest_db_id or '' }}" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+            </div>
+
+            <button type="submit" style="margin-top: 24px;">Save</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
