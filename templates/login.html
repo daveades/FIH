@@ -1,22 +1,227 @@
 {% extends "base.html" %}
-{% block title %}Login — FIH{% endblock %}
+{% block title %}Sign in — FIH{% endblock %}
+{% block head %}
+<style>
+    body { display: flex; align-items: stretch; min-height: 100vh; }
+
+    .auth-split {
+        display: flex;
+        width: 100%;
+        min-height: 100vh;
+    }
+
+    .auth-left {
+        flex: 0 0 420px;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 48px 44px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .auth-left::after {
+        content: '';
+        position: absolute;
+        bottom: -80px;
+        left: -80px;
+        width: 320px;
+        height: 320px;
+        background: radial-gradient(circle, rgba(212,168,67,0.06) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .auth-brand {
+        font-family: var(--serif);
+        font-size: 1.6rem;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .auth-brand-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--accent);
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .auth-tagline {
+        font-size: 0.8rem;
+        color: var(--text-3);
+        font-family: var(--mono);
+        letter-spacing: 0.05em;
+        margin-top: 6px;
+        padding-left: 20px;
+    }
+
+    .auth-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .stat-item {
+        border-left: 1px solid var(--border);
+        padding-left: 14px;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        color: var(--text-3);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-family: var(--mono);
+    }
+
+    .stat-value {
+        font-size: 1.1rem;
+        color: var(--text);
+        font-family: var(--mono);
+        margin-top: 2px;
+    }
+
+    .stat-value.up { color: var(--green); }
+    .stat-value.down { color: var(--red); }
+
+    .auth-footer {
+        font-size: 0.72rem;
+        color: var(--text-3);
+        font-family: var(--mono);
+    }
+
+    .auth-right {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 48px;
+    }
+
+    .auth-form-wrap {
+        width: 100%;
+        max-width: 360px;
+    }
+
+    .auth-form-wrap h1 {
+        font-family: var(--serif);
+        font-size: 1.6rem;
+        color: #fff;
+        margin-bottom: 6px;
+        font-weight: 400;
+    }
+
+    .auth-form-wrap p {
+        font-size: 0.8rem;
+        color: var(--text-2);
+        margin-bottom: 28px;
+    }
+
+    .form-footer {
+        margin-top: 20px;
+        font-size: 0.78rem;
+        color: var(--text-3);
+        text-align: center;
+    }
+
+    .typed::after {
+        content: '|';
+        color: var(--accent);
+        animation: blink 0.8s step-end infinite;
+        margin-left: 1px;
+    }
+
+    .typed.done::after { display: none; }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+
+    @media (max-width: 700px) {
+        .auth-left { display: none; }
+        .auth-right { padding: 32px 24px; }
+    }
+</style>
+{% endblock %}
 {% block body %}
-<div class="container">
-    <div class="card">
-        <h1>Sign in</h1>
-        {% if error %}<p class="error">{{ error }}</p>{% endif %}
-        <form method="POST">
-            <div class="field">
-                <label>Email</label>
-                <input type="email" name="email" required autofocus>
+<div class="auth-split">
+    <div class="auth-left">
+        <div>
+            <div class="auth-brand">
+                <div class="auth-brand-dot"></div>
+                FIH
             </div>
-            <div class="field">
-                <label>Password</label>
-                <input type="password" name="password" required>
+            <div class="auth-tagline">Finance Intelligence Hub</div>
+        </div>
+
+        <div class="auth-stats">
+            <div class="stat-item">
+                <div class="stat-label">AI Analysis Engine</div>
+                <div class="stat-value typed" data-text="Claude Sonnet"></div>
             </div>
-            <button type="submit">Sign in</button>
-        </form>
+            <div class="stat-item">
+                <div class="stat-label">Data Source</div>
+                <div class="stat-value typed" data-text="Alpha Vantage"></div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Storage</div>
+                <div class="stat-value typed" data-text="Notion"></div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Status</div>
+                <div class="stat-value up typed" data-text="● Operational"></div>
+            </div>
+        </div>
+
+        <div class="auth-footer typed-footer" data-text="Automated stock research. Daily."></div>
     </div>
-    <p class="footer-link">No account? <a href="/register">Create one</a></p>
+
+    <div class="auth-right">
+        <div class="auth-form-wrap">
+            <h1>Welcome back</h1>
+            <p>Sign in to your account to continue</p>
+
+            {% if error %}<div class="error-msg">{{ error }}</div>{% endif %}
+
+            <form method="POST">
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" name="email" required autofocus autocomplete="email">
+                </div>
+                <div class="field">
+                    <label>Password</label>
+                    <input type="password" name="password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-full" style="margin-top: 20px;">Sign in</button>
+            </form>
+
+            <div class="form-footer">No account? <a href="/register">Create one</a></div>
+        </div>
+    </div>
 </div>
+<script>
+function typeEl(el, delay) {
+    const text = el.dataset.text;
+    let i = 0;
+    setTimeout(() => {
+        const interval = setInterval(() => {
+            el.textContent = text.slice(0, ++i);
+            if (i === text.length) {
+                clearInterval(interval);
+                el.classList.add('done');
+            }
+        }, 45);
+    }, delay);
+}
+
+document.querySelectorAll('.typed').forEach((el, i) => typeEl(el, i * 400));
+
+const footer = document.querySelector('.typed-footer');
+if (footer) typeEl(footer, document.querySelectorAll('.typed').length * 400 + 200);
+</script>
 {% endblock %}

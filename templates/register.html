@@ -1,22 +1,209 @@
 {% extends "base.html" %}
-{% block title %}Register — FIH{% endblock %}
+{% block title %}Create account — FIH{% endblock %}
+{% block head %}
+<style>
+    body { display: flex; align-items: stretch; min-height: 100vh; }
+
+    .auth-split {
+        display: flex;
+        width: 100%;
+        min-height: 100vh;
+    }
+
+    .auth-left {
+        flex: 0 0 420px;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 48px 44px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .auth-left::after {
+        content: '';
+        position: absolute;
+        bottom: -80px;
+        left: -80px;
+        width: 320px;
+        height: 320px;
+        background: radial-gradient(circle, rgba(212,168,67,0.06) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .auth-brand {
+        font-family: var(--serif);
+        font-size: 1.6rem;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .auth-brand-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--accent);
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .auth-tagline {
+        font-size: 0.8rem;
+        color: var(--text-3);
+        font-family: var(--mono);
+        letter-spacing: 0.05em;
+        margin-top: 6px;
+        padding-left: 20px;
+    }
+
+    .auth-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .step {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+    }
+
+    .step-num {
+        width: 22px;
+        height: 22px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    .step-text strong {
+        display: block;
+        font-size: 0.82rem;
+        color: var(--text);
+        font-weight: 500;
+        margin-bottom: 2px;
+    }
+
+    .step-text span {
+        font-size: 0.75rem;
+        color: var(--text-3);
+    }
+
+    .auth-footer {
+        font-size: 0.72rem;
+        color: var(--text-3);
+        font-family: var(--mono);
+    }
+
+    .auth-right {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 48px;
+    }
+
+    .auth-form-wrap {
+        width: 100%;
+        max-width: 360px;
+    }
+
+    .auth-form-wrap h1 {
+        font-family: var(--serif);
+        font-size: 1.6rem;
+        color: #fff;
+        margin-bottom: 6px;
+        font-weight: 400;
+    }
+
+    .auth-form-wrap p {
+        font-size: 0.8rem;
+        color: var(--text-2);
+        margin-bottom: 28px;
+    }
+
+    .form-footer {
+        margin-top: 20px;
+        font-size: 0.78rem;
+        color: var(--text-3);
+        text-align: center;
+    }
+
+    @media (max-width: 700px) {
+        .auth-left { display: none; }
+        .auth-right { padding: 32px 24px; }
+    }
+</style>
+{% endblock %}
 {% block body %}
-<div class="container">
-    <div class="card">
-        <h1>Create account</h1>
-        {% if error %}<p class="error">{{ error }}</p>{% endif %}
-        <form method="POST">
-            <div class="field">
-                <label>Email</label>
-                <input type="email" name="email" required autofocus>
+<div class="auth-split">
+    <div class="auth-left">
+        <div>
+            <div class="auth-brand">
+                <div class="auth-brand-dot"></div>
+                FIH
             </div>
-            <div class="field">
-                <label>Password</label>
-                <input type="password" name="password" required>
+            <div class="auth-tagline">Finance Intelligence Hub</div>
+        </div>
+
+        <div class="auth-steps">
+            <div class="step">
+                <div class="step-num">01</div>
+                <div class="step-text">
+                    <strong>Create your account</strong>
+                    <span>Email and password — takes 10 seconds</span>
+                </div>
             </div>
-            <button type="submit">Create account</button>
-        </form>
+            <div class="step">
+                <div class="step-num">02</div>
+                <div class="step-text">
+                    <strong>Connect your APIs</strong>
+                    <span>Anthropic, Notion, and Alpha Vantage keys</span>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">03</div>
+                <div class="step-text">
+                    <strong>Run your first analysis</strong>
+                    <span>AI-powered research on your watchlist</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="auth-footer">Bring your own keys. Your data stays yours.</div>
     </div>
-    <p class="footer-link">Already have an account? <a href="/login">Sign in</a></p>
+
+    <div class="auth-right">
+        <div class="auth-form-wrap">
+            <h1>Get started</h1>
+            <p>Create your account to begin</p>
+
+            {% if error %}<div class="error-msg">{{ error }}</div>{% endif %}
+
+            <form method="POST">
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" name="email" required autofocus autocomplete="email">
+                </div>
+                <div class="field">
+                    <label>Password</label>
+                    <input type="password" name="password" required autocomplete="new-password">
+                </div>
+                <button type="submit" class="btn btn-full" style="margin-top: 20px;">Create account</button>
+            </form>
+
+            <div class="form-footer">Already have an account? <a href="/login">Sign in</a></div>
+        </div>
+    </div>
 </div>
 {% endblock %}

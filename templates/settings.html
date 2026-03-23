@@ -1,53 +1,243 @@
 {% extends "base.html" %}
 {% block title %}Settings — FIH{% endblock %}
+{% block head %}
+<style>
+    .page {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+    }
+
+    .page-header {
+        margin-bottom: 36px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .page-header h1 {
+        font-family: var(--serif);
+        font-size: 1.5rem;
+        color: #fff;
+        font-weight: 400;
+        margin-bottom: 4px;
+    }
+
+    .page-header p {
+        font-size: 0.8rem;
+        color: var(--text-2);
+    }
+
+    .section {
+        margin-bottom: 36px;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .section-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-family: var(--mono);
+    }
+
+    .section-line {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    .field-grid {
+        display: grid;
+        gap: 12px;
+    }
+
+    .key-field {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 14px 16px;
+        transition: border-color 0.15s;
+    }
+
+    .key-field:focus-within {
+        border-color: var(--accent-dim);
+    }
+
+    .key-field label {
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: var(--text-2);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .key-status {
+        font-size: 0.65rem;
+        letter-spacing: 0.05em;
+        padding: 1px 6px;
+    }
+
+    .key-status.set {
+        color: var(--green);
+        background: rgba(29,184,106,0.1);
+    }
+
+    .key-status.unset {
+        color: var(--text-3);
+        background: var(--surface-2);
+    }
+
+    .key-field input {
+        border: none;
+        background: transparent;
+        padding: 0;
+        font-family: var(--mono);
+        font-size: 0.82rem;
+    }
+
+    .key-field input:focus { border: none; }
+
+    .submit-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding-top: 8px;
+    }
+
+    .hint {
+        font-size: 0.75rem;
+        color: var(--text-3);
+    }
+</style>
+{% endblock %}
 {% block body %}
 <nav>
-    <span class="brand">FIH</span>
+    <span class="nav-brand">FIH</span>
     <div class="nav-links">
         <a href="/">Dashboard</a>
         <a href="/logout">Logout</a>
     </div>
 </nav>
-<div class="container" style="max-width: 600px; margin-top: 40px;">
-    <div class="card">
+
+<div class="page">
+    <div class="page-header">
         <h1>Settings</h1>
-        {% if saved %}<p style="color: #4caf82; font-size: 0.85rem; margin-bottom: 16px;">Saved.</p>{% endif %}
-        {% if error %}<p class="error">{{ error }}</p>{% endif %}
-        <form method="POST">
-            <p style="color: #666; font-size: 0.85rem; margin-bottom: 20px;">API Keys</p>
-            <div class="field">
-                <label>Anthropic API Key</label>
-                <input type="password" name="anthropic_api_key" placeholder="{{ '••••••' if user.anthropic_api_key else 'sk-ant-...' }}">
-            </div>
-            <div class="field">
-                <label>Notion API Key</label>
-                <input type="password" name="notion_api_key" placeholder="{{ '••••••' if user.notion_api_key else 'secret_...' }}">
-            </div>
-            <div class="field">
-                <label>Alpha Vantage API Key</label>
-                <input type="password" name="alpha_vantage_api_key" placeholder="{{ '••••••' if user.alpha_vantage_api_key else 'Your key' }}">
-            </div>
-
-            <p style="color: #666; font-size: 0.85rem; margin: 24px 0 20px;">Notion Database IDs</p>
-            <div class="field">
-                <label>Watchlist DB</label>
-                <input type="text" name="watchlist_db_id" value="{{ user.watchlist_db_id or '' }}" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-            </div>
-            <div class="field">
-                <label>Research Notes DB</label>
-                <input type="text" name="research_notes_db_id" value="{{ user.research_notes_db_id or '' }}" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-            </div>
-            <div class="field">
-                <label>Earnings Calendar DB</label>
-                <input type="text" name="earnings_calendar_db_id" value="{{ user.earnings_calendar_db_id or '' }}" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-            </div>
-            <div class="field">
-                <label>Daily Digest DB</label>
-                <input type="text" name="daily_digest_db_id" value="{{ user.daily_digest_db_id or '' }}" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-            </div>
-
-            <button type="submit" style="margin-top: 24px;">Save</button>
-        </form>
+        <p>Your API keys are stored securely and only used to run your analysis.</p>
     </div>
+
+    {% if saved %}<div class="success-msg">Changes saved.</div>{% endif %}
+    {% if error %}<div class="error-msg">{{ error }}</div>{% endif %}
+
+    <form method="POST">
+        <div class="section">
+            <div class="section-header">
+                <span class="section-label">API Keys</span>
+                <div class="section-line"></div>
+            </div>
+            <div class="field-grid">
+                <div class="key-field">
+                    <label>
+                        Anthropic
+                        <span class="key-status {{ 'set' if user.anthropic_api_key else 'unset' }}">
+                            {{ 'connected' if user.anthropic_api_key else 'not set' }}
+                        </span>
+                    </label>
+                    <input type="password" name="anthropic_api_key"
+                           placeholder="{{ '••••••••••••••••' if user.anthropic_api_key else 'sk-ant-...' }}"
+                           autocomplete="off">
+                </div>
+                <div class="key-field">
+                    <label>
+                        Notion
+                        <span class="key-status {{ 'set' if user.notion_api_key else 'unset' }}">
+                            {{ 'connected' if user.notion_api_key else 'not set' }}
+                        </span>
+                    </label>
+                    <input type="password" name="notion_api_key"
+                           placeholder="{{ '••••••••••••••••' if user.notion_api_key else 'secret_...' }}"
+                           autocomplete="off">
+                </div>
+                <div class="key-field">
+                    <label>
+                        Alpha Vantage
+                        <span class="key-status {{ 'set' if user.alpha_vantage_api_key else 'unset' }}">
+                            {{ 'connected' if user.alpha_vantage_api_key else 'not set' }}
+                        </span>
+                    </label>
+                    <input type="password" name="alpha_vantage_api_key"
+                           placeholder="{{ '••••••••••••••••' if user.alpha_vantage_api_key else 'Your key' }}"
+                           autocomplete="off">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-label">Notion Databases</span>
+                <div class="section-line"></div>
+            </div>
+            <div class="field-grid">
+                <div class="key-field">
+                    <label>
+                        Watchlist
+                        <span class="key-status {{ 'set' if user.watchlist_db_id else 'unset' }}">
+                            {{ 'connected' if user.watchlist_db_id else 'not set' }}
+                        </span>
+                    </label>
+                    <input type="text" name="watchlist_db_id"
+                           value="{{ user.watchlist_db_id or '' }}"
+                           placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                </div>
+                <div class="key-field">
+                    <label>
+                        Research Notes
+                        <span class="key-status {{ 'set' if user.research_notes_db_id else 'unset' }}">
+                            {{ 'connected' if user.research_notes_db_id else 'not set' }}
+                        </span>
+                    </label>
+                    <input type="text" name="research_notes_db_id"
+                           value="{{ user.research_notes_db_id or '' }}"
+                           placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                </div>
+                <div class="key-field">
+                    <label>
+                        Earnings Calendar
+                        <span class="key-status {{ 'set' if user.earnings_calendar_db_id else 'unset' }}">
+                            {{ 'connected' if user.earnings_calendar_db_id else 'not set' }}
+                        </span>
+                    </label>
+                    <input type="text" name="earnings_calendar_db_id"
+                           value="{{ user.earnings_calendar_db_id or '' }}"
+                           placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                </div>
+                <div class="key-field">
+                    <label>
+                        Daily Digest
+                        <span class="key-status {{ 'set' if user.daily_digest_db_id else 'unset' }}">
+                            {{ 'connected' if user.daily_digest_db_id else 'not set' }}
+                        </span>
+                    </label>
+                    <input type="text" name="daily_digest_db_id"
+                           value="{{ user.daily_digest_db_id or '' }}"
+                           placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                </div>
+            </div>
+        </div>
+
+        <div class="submit-row">
+            <button type="submit" class="btn">Save changes</button>
+            <span class="hint">Leave a field blank to keep the existing value.</span>
+        </div>
+    </form>
 </div>
 {% endblock %}
