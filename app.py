@@ -81,6 +81,21 @@ def settings():
         saved = True
     return render_template("settings.html", user=request.user, saved=saved)
 
+@app.route("/setup-notion", methods=["POST"])
+@login_required
+def setup_notion():
+    from flask import jsonify
+    from tools.notion_setup import setup_notion_workspace
+    api_key = request.user.get("notion_api_key")
+    if not api_key:
+        return jsonify({"error": "Save your Notion API key first."}), 400
+    try:
+        ids = setup_notion_workspace(api_key)
+        update_user_keys(request.user["id"], ids)
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/run", methods=["POST"])
 @login_required
 def run_analysis():
@@ -118,14 +133,18 @@ def _run_for_user(user):
 @app.route("/api/logs")
 @login_required
 def log_stream():
+    import queue
     import core.logger as logger
 
     def stream():
         while True:
-            msg = logger.log_queue.get()
-            yield f"data: {msg}\n\n"
-            if msg == "__done__":
-                break
+            try:
+                msg = logger.log_queue.get(timeout=10)
+                yield f"data: {msg}\n\n"
+                if msg == "__done__":
+                    break
+            except queue.Empty:
+                yield ": keepalive\n\n"
 
     return Response(stream(), mimetype="text/event-stream")
 

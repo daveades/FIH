@@ -186,6 +186,24 @@
                 <span class="section-label">Notion Databases</span>
                 <div class="section-line"></div>
             </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; padding:12px 16px; background:var(--surface); border:1px solid var(--border);">
+                <div>
+                    <div style="font-size:0.82rem; color:var(--text); margin-bottom:3px;">Auto-setup</div>
+                    <div style="font-size:0.75rem; color:var(--text-3);">Creates all 4 databases in your Notion workspace automatically.</div>
+                </div>
+                <button type="button" id="setup-btn" class="btn"
+                    style="width:auto; flex-shrink:0;"
+                    {% if not user.notion_api_key %}disabled title="Save your Notion API key first"{% endif %}>
+                    Set up Notion
+                </button>
+            </div>
+            <div id="setup-msg" style="display:none; font-size:0.78rem; margin-bottom:14px; padding:8px 10px; border-left:2px solid;"></div>
+
+            <div style="font-size:0.72rem; color:var(--text-3); margin-bottom:12px; font-family:var(--mono);">
+                or enter IDs manually
+            </div>
+
             <div class="field-grid">
                 <div class="key-field">
                     <label>
@@ -240,4 +258,37 @@
         </div>
     </form>
 </div>
+
+<script>
+    const setupBtn = document.getElementById('setup-btn');
+    const setupMsg = document.getElementById('setup-msg');
+
+    function showMsg(text, ok) {
+        setupMsg.style.display = 'block';
+        setupMsg.style.color = ok ? 'var(--green)' : 'var(--red)';
+        setupMsg.style.borderColor = ok ? 'var(--green)' : 'var(--red)';
+        setupMsg.style.background = ok ? 'rgba(29,184,106,0.07)' : 'rgba(224,82,82,0.07)';
+        setupMsg.textContent = text;
+    }
+
+    if (setupBtn) {
+        setupBtn.addEventListener('click', async () => {
+            setupBtn.disabled = true;
+            setupBtn.textContent = 'Setting up...';
+            setupMsg.style.display = 'none';
+
+            const res = await fetch('/setup-notion', { method: 'POST' });
+            const data = await res.json();
+
+            if (data.ok) {
+                showMsg('Notion workspace set up successfully. Reloading...', true);
+                setTimeout(() => location.reload(), 1200);
+            } else {
+                showMsg(data.error || 'Something went wrong.', false);
+                setupBtn.disabled = false;
+                setupBtn.textContent = 'Set up Notion';
+            }
+        });
+    }
+</script>
 {% endblock %}
