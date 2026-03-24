@@ -4,16 +4,14 @@ from dotenv import load_dotenv
 from flask import Flask, Response, render_template, request, redirect, url_for, session
 
 load_dotenv()
-from web.db import init_db, get_user_by_id, update_user_keys
+from web.db import init_db, get_user_by_id, update_user_keys, get_all_users
 from web.auth import register, login
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev")
 
-KEY_FIELDS = [
-    "anthropic_api_key", "notion_api_key", "alpha_vantage_api_key",
-    "watchlist_db_id", "research_notes_db_id", "earnings_calendar_db_id", "daily_digest_db_id"
-]
+KEY_FIELDS = ["anthropic_api_key", "notion_api_key", "alpha_vantage_api_key"]
+DB_ID_FIELDS = ["watchlist_db_id", "research_notes_db_id", "earnings_calendar_db_id", "daily_digest_db_id"]
 
 @app.before_request
 def load_user():
@@ -31,7 +29,7 @@ def login_required(f):
     return wrapper
 
 def keys_configured(user):
-    return all(user.get(k) for k in KEY_FIELDS)
+    return all(user.get(k) for k in KEY_FIELDS + DB_ID_FIELDS)
 
 @app.route("/register", methods=["GET", "POST"])
 def register_page():
@@ -87,10 +85,13 @@ def setup_notion():
     from flask import jsonify
     from tools.notion_setup import setup_notion_workspace
     api_key = request.user.get("notion_api_key")
+    parent_page_id = request.json.get("parent_page_id", "").strip() if request.is_json else request.form.get("parent_page_id", "").strip()
     if not api_key:
         return jsonify({"error": "Save your Notion API key first."}), 400
+    if not parent_page_id:
+        return jsonify({"error": "Parent page ID is required."}), 400
     try:
-        ids = setup_notion_workspace(api_key)
+        ids = setup_notion_workspace(api_key, parent_page_id)
         update_user_keys(request.user["id"], ids)
         return jsonify({"ok": True})
     except Exception as e:
@@ -150,4 +151,6 @@ def log_stream():
 
 if __name__ == "__main__":
     init_db()
+    from scheduler import start
+    start()
     app.run(debug=True)

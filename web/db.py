@@ -45,6 +45,12 @@ def create_user(email, password_hash):
             )
             return cur.fetchone()[0]
 
+def get_all_users():
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT * FROM users")
+            return cur.fetchall()
+
 def update_user_keys(user_id, keys: dict):
     allowed = {"anthropic_api_key", "notion_api_key", "alpha_vantage_api_key",
                "watchlist_db_id", "research_notes_db_id", "earnings_calendar_db_id", "daily_digest_db_id"}

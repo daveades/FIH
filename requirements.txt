@@ -5,3 +5,4 @@ httpx
 flask
 psycopg2-binary
 werkzeug
+apscheduler
