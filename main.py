@@ -13,6 +13,9 @@ def run():
     logger.info(f"date: {today}")
 
     watchlist = get_watchlist()
+    if not watchlist:
+        logger.info("no tickers on watchlist — nothing to run")
+        return
     logger.info(f"{len(watchlist)} tickers on watchlist: {', '.join(s['ticker'] for s in watchlist)}")
 
     logger.section("fetching market data")

@@ -187,69 +187,26 @@
                 <div class="section-line"></div>
             </div>
 
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; padding:12px 16px; background:var(--surface); border:1px solid var(--border);">
-                <div>
-                    <div style="font-size:0.82rem; color:var(--text); margin-bottom:3px;">Auto-setup</div>
-                    <div style="font-size:0.75rem; color:var(--text-3);">Creates all 4 databases in your Notion workspace automatically.</div>
+            <div style="margin-bottom:16px; padding:16px; background:var(--surface); border:1px solid var(--border);">
+                <div style="font-size:0.82rem; color:var(--text); margin-bottom:3px;">Auto-setup</div>
+                <div style="font-size:0.75rem; color:var(--text-3); margin-bottom:12px;">Creates all 4 databases automatically. Create a page in Notion, share it with your integration, then paste its ID below.</div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="text" id="parent-page-id" placeholder="Notion parent page ID"
+                           style="flex:1; padding:8px 12px; background:var(--bg); border:1px solid var(--border); color:var(--text); font-family:var(--mono); font-size:0.8rem;">
+                    <button type="button" id="setup-btn" class="btn"
+                        style="width:auto; flex-shrink:0;"
+                        {% if not user.notion_api_key %}disabled title="Save your Notion API key first"{% endif %}>
+                        Set up Notion
+                    </button>
                 </div>
-                <button type="button" id="setup-btn" class="btn"
-                    style="width:auto; flex-shrink:0;"
-                    {% if not user.notion_api_key %}disabled title="Save your Notion API key first"{% endif %}>
-                    Set up Notion
-                </button>
             </div>
             <div id="setup-msg" style="display:none; font-size:0.78rem; margin-bottom:14px; padding:8px 10px; border-left:2px solid;"></div>
 
-            <div style="font-size:0.72rem; color:var(--text-3); margin-bottom:12px; font-family:var(--mono);">
-                or enter IDs manually
+            {% if user.watchlist_db_id %}
+            <div style="font-size:0.78rem; color:var(--green); padding:8px 10px; background:rgba(29,184,106,0.07); border-left:2px solid var(--green);">
+                Notion databases connected.
             </div>
-
-            <div class="field-grid">
-                <div class="key-field">
-                    <label>
-                        Watchlist
-                        <span class="key-status {{ 'set' if user.watchlist_db_id else 'unset' }}">
-                            {{ 'connected' if user.watchlist_db_id else 'not set' }}
-                        </span>
-                    </label>
-                    <input type="text" name="watchlist_db_id"
-                           value="{{ user.watchlist_db_id or '' }}"
-                           placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-                </div>
-                <div class="key-field">
-                    <label>
-                        Research Notes
-                        <span class="key-status {{ 'set' if user.research_notes_db_id else 'unset' }}">
-                            {{ 'connected' if user.research_notes_db_id else 'not set' }}
-                        </span>
-                    </label>
-                    <input type="text" name="research_notes_db_id"
-                           value="{{ user.research_notes_db_id or '' }}"
-                           placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-                </div>
-                <div class="key-field">
-                    <label>
-                        Earnings Calendar
-                        <span class="key-status {{ 'set' if user.earnings_calendar_db_id else 'unset' }}">
-                            {{ 'connected' if user.earnings_calendar_db_id else 'not set' }}
-                        </span>
-                    </label>
-                    <input type="text" name="earnings_calendar_db_id"
-                           value="{{ user.earnings_calendar_db_id or '' }}"
-                           placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-                </div>
-                <div class="key-field">
-                    <label>
-                        Daily Digest
-                        <span class="key-status {{ 'set' if user.daily_digest_db_id else 'unset' }}">
-                            {{ 'connected' if user.daily_digest_db_id else 'not set' }}
-                        </span>
-                    </label>
-                    <input type="text" name="daily_digest_db_id"
-                           value="{{ user.daily_digest_db_id or '' }}"
-                           placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-                </div>
-            </div>
+            {% endif %}
         </div>
 
         <div class="submit-row">
@@ -273,11 +230,20 @@
 
     if (setupBtn) {
         setupBtn.addEventListener('click', async () => {
+            const parentPageId = document.getElementById('parent-page-id').value.trim();
+            if (!parentPageId) {
+                showMsg('Enter a parent page ID first.', false);
+                return;
+            }
             setupBtn.disabled = true;
             setupBtn.textContent = 'Setting up...';
             setupMsg.style.display = 'none';
 
-            const res = await fetch('/setup-notion', { method: 'POST' });
+            const res = await fetch('/setup-notion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ parent_page_id: parentPageId })
+            });
             const data = await res.json();
 
             if (data.ok) {
