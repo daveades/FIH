@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIH — System Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg:       #07090d;
+    --s1:       #0c1018;
+    --s2:       #111820;
+    --s3:       #18222e;
+    --border:   #1e2c3e;
+    --border2:  #263545;
+    --gold:     #d4a843;
+    --gold2:    #f0c96a;
+    --golddim:  rgba(212,168,67,0.12);
+    --blue:     #4a9eff;
+    --bluedim:  rgba(74,158,255,0.1);
+    --purple:   #a78bfa;
+    --purpledim:rgba(167,139,250,0.1);
+    --green:    #1db86a;
+    --text:     #c8d4e0;
+    --text2:    #7a8fa8;
+    --text3:    #3d5068;
+    --mono:     'JetBrains Mono', monospace;
+    --serif:    'Instrument Serif', serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    padding: 48px 40px 60px;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Grid background */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(30,44,62,0.4) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(30,44,62,0.4) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Noise */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 160px;
+    opacity: 0.022;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.wrap { position: relative; z-index: 1; max-width: 1300px; margin: 0 auto; }
+
+/* ── Header ── */
+.header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 52px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    animation: fadeUp 0.6s ease both;
+}
+
+.header-left {}
+
+.brand {
+    font-family: var(--serif);
+    font-size: 2.6rem;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.brand-dot {
+    width: 10px;
+    height: 10px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%,100%{box-shadow:0 0 0 0 rgba(212,168,67,0.4);}
+    50%{box-shadow:0 0 0 8px rgba(212,168,67,0);}
+}
+
+.brand-sub {
+    font-size: 0.7rem;
+    color: var(--text3);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding-left: 24px;
+}
+
+.header-right {
+    text-align: right;
+}
+
+.stack-pills {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+
+.pill {
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border: 1px solid;
+    border-radius: 2px;
+}
+
+.pill.claude  { color: var(--gold);   border-color: var(--golddim); background: var(--golddim); }
+.pill.notion  { color: var(--purple); border-color: var(--purpledim); background: var(--purpledim); }
+.pill.alpha   { color: var(--blue);   border-color: var(--bluedim); background: var(--bluedim); }
+.pill.flask   { color: var(--green);  border-color: rgba(29,184,106,0.15); background: rgba(29,184,106,0.07); }
+.pill.postgres{ color: var(--text2);  border-color: var(--border); background: var(--s2); }
+
+.header-ts {
+    font-size: 0.62rem;
+    color: var(--text3);
+    letter-spacing: 0.06em;
+}
+
+/* ── Section label ── */
+.sec-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: fadeUp 0.6s ease both;
+}
+
+.sec-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ── Web layer ── */
+.web-section { margin-bottom: 44px; animation: fadeUp 0.7s 0.1s ease both; }
+
+.web-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+}
+
+.web-node {
+    flex: 1;
+    background: var(--s1);
+    border: 1px solid var(--border);
+    padding: 18px 20px 16px;
+    position: relative;
+    transition: border-color 0.2s;
+}
+
+.web-node:hover { border-color: var(--border2); }
+.web-node + .web-node { border-left: none; }
+
+.web-node-num {
+    font-size: 0.58rem;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+}
+
+.web-node-icon {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+
+.web-node-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.web-node-desc {
+    font-size: 0.67rem;
+    color: var(--text2);
+    line-height: 1.6;
+}
+
+.web-node-tag {
+    display: inline-block;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    margin-top: 10px;
+    border: 1px solid var(--border);
+    color: var(--text3);
+}
+
+.web-node-tag.active { color: var(--green); border-color: rgba(29,184,106,0.3); background: rgba(29,184,106,0.06); }
+
+/* Arrow between web nodes */
+.web-arrow {
+    width: 28px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: var(--s1);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.web-arrow::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: var(--border2);
+    top: 50%;
+}
+
+.web-arrow-dot {
+    width: 5px;
+    height: 5px;
+    background: var(--green);
+    border-radius: 50%;
+    position: absolute;
+    left: -5px;
+    top: calc(50% - 2.5px);
+    animation: flow-web 1.8s ease-in-out infinite;
+    box-shadow: 0 0 6px var(--green);
+}
+
+.web-arrow-dot:nth-child(2) { animation-delay: 0.9s; }
+
+@keyframes flow-web {
+    0%   { left: -5px; opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { left: calc(100% + 5px); opacity: 0; }
+}
+
+/* Trigger arrow (web → pipeline) */
+.trigger-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 auto 20px;
+    gap: 0;
+    width: fit-content;
+    animation: fadeUp 0.7s 0.15s ease both;
+}
+
+.trigger-line {
+    width: 1px;
+    height: 32px;
+    background: linear-gradient(to bottom, var(--border), var(--gold-dim, #d4a84366));
+    position: relative;
+    overflow: hidden;
+}
+
+.trigger-line::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: -2px;
+    width: 5px;
+    height: 5px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: flow-down 1.5s ease-in-out infinite;
+    box-shadow: 0 0 6px var(--gold);
+}
+
+@keyframes flow-down {
+    0%   { top: -6px; opacity: 0; }
+    20%  { opacity: 1; }
+    80%  { opacity: 1; }
+    100% { top: calc(100% + 6px); opacity: 0; }
+}
+
+.trigger-label {
+    font-size: 0.6rem;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: 1px solid var(--golddim);
+    background: var(--golddim);
+    padding: 3px 10px;
+}
+
+/* ── Pipeline ── */
+.pipeline-section { animation: fadeUp 0.8s 0.2s ease both; }
+
+.pipeline-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+}
+
+.pipe-node {
+    flex: 1;
+    background: var(--s1);
+    border: 1px solid var(--border);
+    padding: 20px 16px 18px;
+    position: relative;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: default;
+}
+
+.pipe-node + .pipe-node { border-left: none; }
+
+.pipe-node:hover { border-color: var(--border2); background: var(--s2); }
+
+/* Service color bar on top */
+.pipe-node::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+}
+
+.pipe-node.notion::before   { background: var(--purple); }
+.pipe-node.alpha::before    { background: var(--blue); }
+.pipe-node.claude::before   { background: var(--gold); }
+
+.pipe-step {
+    font-size: 0.56rem;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+}
+
+.pipe-service {
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.pipe-node.notion   .pipe-service { color: var(--purple); }
+.pipe-node.alpha    .pipe-service { color: var(--blue);   }
+.pipe-node.claude   .pipe-service { color: var(--gold);   }
+
+.pipe-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+.pipe-desc {
+    font-size: 0.63rem;
+    color: var(--text2);
+    line-height: 1.65;
+}
+
+.pipe-outputs {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pipe-output {
+    font-size: 0.6rem;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.pipe-output::before {
+    content: '→';
+    font-size: 0.55rem;
+}
+
+/* Arrow between pipeline nodes */
+.pipe-arrow {
+    width: 24px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--s1);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+}
+
+.pipe-arrow::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: var(--border2);
+    top: 50%;
+}
+
+.pipe-arrow-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    position: absolute;
+    left: -5px;
+    top: calc(50% - 2.5px);
+    animation: flow-pipe 2s ease-in-out infinite;
+}
+
+.pipe-arrow-dot.gold   { background: var(--gold);   box-shadow: 0 0 5px var(--gold);   }
+.pipe-arrow-dot.purple { background: var(--purple); box-shadow: 0 0 5px var(--purple); }
+.pipe-arrow-dot.blue   { background: var(--blue);   box-shadow: 0 0 5px var(--blue);   }
+
+.pipe-arrow-dot:nth-child(2) { animation-delay: 1s; }
+
+@keyframes flow-pipe {
+    0%   { left: -5px; opacity: 0; }
+    15%  { opacity: 1; }
+    85%  { opacity: 1; }
+    100% { left: calc(100% + 5px); opacity: 0; }
+}
+
+/* ── Footer ── */
+.footer {
+    margin-top: 44px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: fadeUp 0.8s 0.3s ease both;
+}
+
+.footer-note {
+    font-size: 0.62rem;
+    color: var(--text3);
+    letter-spacing: 0.05em;
+}
+
+.footer-note span { color: var(--gold); }
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="brand">
+                <div class="brand-dot"></div>
+                FIH
+            </div>
+            <div class="brand-sub">Finance Intelligence Hub &mdash; System Architecture</div>
+        </div>
+        <div class="header-right">
+            <div class="stack-pills">
+                <span class="pill claude">Claude AI</span>
+                <span class="pill notion">Notion</span>
+                <span class="pill alpha">Alpha Vantage</span>
+                <span class="pill flask">Flask</span>
+                <span class="pill postgres">PostgreSQL</span>
+            </div>
+            <div class="header-ts">AI-powered stock research · automated daily pipeline</div>
+        </div>
+    </div>
+
+    <!-- Web Layer -->
+    <div class="web-section">
+        <div class="sec-label">Web Layer — User Interface</div>
+        <div class="web-row">
+
+            <div class="web-node">
+                <div class="web-node-num">01</div>
+                <div class="web-node-icon">⬡</div>
+                <div class="web-node-title">Auth</div>
+                <div class="web-node-desc">Register or sign in.<br>Session stored securely.</div>
+                <div class="web-node-tag">Flask · PostgreSQL</div>
+            </div>
+
+            <div class="web-arrow">
+                <div class="web-arrow-dot"></div>
+                <div class="web-arrow-dot"></div>
+            </div>
+
+            <div class="web-node">
+                <div class="web-node-num">02</div>
+                <div class="web-node-icon">⬡</div>
+                <div class="web-node-title">Settings</div>
+                <div class="web-node-desc">Save API keys.<br>Auto-create Notion databases.</div>
+                <div class="web-node-tag">Encrypted · Per-user</div>
+            </div>
+
+            <div class="web-arrow">
+                <div class="web-arrow-dot"></div>
+                <div class="web-arrow-dot"></div>
+            </div>
+
+            <div class="web-node">
+                <div class="web-node-num">03</div>
+                <div class="web-node-icon">⬡</div>
+                <div class="web-node-title">Trigger</div>
+                <div class="web-node-desc">Run Now button<br>or auto-schedule.</div>
+                <div class="web-node-tag active">9:00 AM · 8:00 PM</div>
+            </div>
+
+            <div class="web-arrow">
+                <div class="web-arrow-dot"></div>
+                <div class="web-arrow-dot"></div>
+            </div>
+
+            <div class="web-node">
+                <div class="web-node-num">04</div>
+                <div class="web-node-icon">⬡</div>
+                <div class="web-node-title">Live Output</div>
+                <div class="web-node-desc">Real-time log stream<br>direct to browser.</div>
+                <div class="web-node-tag active">SSE Stream</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Trigger connector -->
+    <div class="trigger-connector">
+        <div class="trigger-line"></div>
+        <div class="trigger-label">triggers pipeline</div>
+        <div class="trigger-line"></div>
+    </div>
+
+    <!-- Pipeline -->
+    <div class="pipeline-section">
+        <div class="sec-label">Analysis Pipeline — Automated</div>
+        <div class="pipeline-row">
+
+            <div class="pipe-node notion">
+                <div class="pipe-step">STEP 01</div>
+                <div class="pipe-service">Notion</div>
+                <div class="pipe-title">Fetch Watchlist</div>
+                <div class="pipe-desc">Reads tickers and company names from the user's Notion watchlist database.</div>
+                <div class="pipe-outputs">
+                    <div class="pipe-output">Ticker symbols</div>
+                    <div class="pipe-output">Company names</div>
+                </div>
+            </div>
+
+            <div class="pipe-arrow">
+                <div class="pipe-arrow-dot purple"></div>
+                <div class="pipe-arrow-dot purple"></div>
+            </div>
+
+            <div class="pipe-node alpha">
+                <div class="pipe-step">STEP 02</div>
+                <div class="pipe-service">Alpha Vantage</div>
+                <div class="pipe-title">Market Data</div>
+                <div class="pipe-desc">Fetches live prices, % change, and upcoming earnings dates per ticker.</div>
+                <div class="pipe-outputs">
+                    <div class="pipe-output">Live price</div>
+                    <div class="pipe-output">Earnings date + EPS</div>
+                </div>
+            </div>
+
+            <div class="pipe-arrow">
+                <div class="pipe-arrow-dot blue"></div>
+                <div class="pipe-arrow-dot blue"></div>
+            </div>
+
+            <div class="pipe-node claude">
+                <div class="pipe-step">STEP 03</div>
+                <div class="pipe-service">Claude AI</div>
+                <div class="pipe-title">News Search</div>
+                <div class="pipe-desc">Uses Claude's built-in web search to find latest headlines per ticker.</div>
+                <div class="pipe-outputs">
+                    <div class="pipe-output">News summary</div>
+                    <div class="pipe-output">Source URL</div>
+                </div>
+            </div>
+
+            <div class="pipe-arrow">
+                <div class="pipe-arrow-dot gold"></div>
+                <div class="pipe-arrow-dot gold"></div>
+            </div>
+
+            <div class="pipe-node claude">
+                <div class="pipe-step">STEP 04</div>
+                <div class="pipe-service">Claude AI</div>
+                <div class="pipe-title">Ticker Analysis</div>
+                <div class="pipe-desc">Analyses each stock using price, news and market context. Generates structured output.</div>
+                <div class="pipe-outputs">
+                    <div class="pipe-output">Sentiment + Score</div>
+                    <div class="pipe-output">Bull / Bear case</div>
+                    <div class="pipe-output">Risk level + Alert</div>
+                </div>
+            </div>
+
+            <div class="pipe-arrow">
+                <div class="pipe-arrow-dot gold"></div>
+                <div class="pipe-arrow-dot gold"></div>
+            </div>
+
+            <div class="pipe-node notion">
+                <div class="pipe-step">STEP 05</div>
+                <div class="pipe-service">Notion</div>
+                <div class="pipe-title">Write Results</div>
+                <div class="pipe-desc">Saves research notes, updates watchlist rows, and creates earnings calendar entries.</div>
+                <div class="pipe-outputs">
+                    <div class="pipe-output">Research Notes</div>
+                    <div class="pipe-output">Watchlist updated</div>
+                    <div class="pipe-output">Earnings Calendar</div>
+                </div>
+            </div>
+
+            <div class="pipe-arrow">
+                <div class="pipe-arrow-dot purple"></div>
+                <div class="pipe-arrow-dot purple"></div>
+            </div>
+
+            <div class="pipe-node claude">
+                <div class="pipe-step">STEP 06</div>
+                <div class="pipe-service">Claude AI</div>
+                <div class="pipe-title">Daily Digest</div>
+                <div class="pipe-desc">Synthesises all analyses into a market briefing with mood, movers, and action items.</div>
+                <div class="pipe-outputs">
+                    <div class="pipe-output">Market mood</div>
+                    <div class="pipe-output">Top movers</div>
+                    <div class="pipe-output">Action items</div>
+                </div>
+            </div>
+
+            <div class="pipe-arrow">
+                <div class="pipe-arrow-dot gold"></div>
+                <div class="pipe-arrow-dot gold"></div>
+            </div>
+
+            <div class="pipe-node notion">
+                <div class="pipe-step">STEP 07</div>
+                <div class="pipe-service">Notion</div>
+                <div class="pipe-title">Save Digest</div>
+                <div class="pipe-desc">Upserts today's daily digest entry. Updates if already exists, creates if new.</div>
+                <div class="pipe-outputs">
+                    <div class="pipe-output">Daily Digest DB</div>
+                    <div class="pipe-output">Linked relations</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-note">
+            Built for <span>MLH Hackathon</span> &nbsp;·&nbsp; Per-user pipeline, multi-tenant architecture &nbsp;·&nbsp; Runs daily at 9am and 8pm
+        </div>
+        <div class="footer-note" id="ts"></div>
+    </div>
+
+</div>
+<script>
+    document.getElementById('ts').textContent = new Date().toLocaleDateString('en-GB', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+</script>
+</body>
+</html>
