@@ -187,26 +187,110 @@
                 <div class="section-line"></div>
             </div>
 
-            <div style="margin-bottom:16px; padding:16px; background:var(--surface); border:1px solid var(--border);">
-                <div style="font-size:0.82rem; color:var(--text); margin-bottom:3px;">Auto-setup</div>
-                <div style="font-size:0.75rem; color:var(--text-3); margin-bottom:12px;">Creates all 4 databases automatically. Create a page in Notion, share it with your integration, then paste its ID below.</div>
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <input type="text" id="parent-page-id" placeholder="Notion parent page ID"
-                           style="flex:1; padding:8px 12px; background:var(--bg); border:1px solid var(--border); color:var(--text); font-family:var(--mono); font-size:0.8rem;">
-                    <button type="button" id="setup-btn" class="btn"
-                        style="width:auto; flex-shrink:0;"
-                        {% if not user.notion_api_key %}disabled title="Save your Notion API key first"{% endif %}>
-                        Set up Notion
-                    </button>
-                </div>
-            </div>
-            <div id="setup-msg" style="display:none; font-size:0.78rem; margin-bottom:14px; padding:8px 10px; border-left:2px solid;"></div>
-
             {% if user.watchlist_db_id %}
-            <div style="font-size:0.78rem; color:var(--green); padding:8px 10px; background:rgba(29,184,106,0.07); border-left:2px solid var(--green);">
+            <div style="font-size:0.78rem; color:var(--green); padding:8px 10px; background:rgba(29,184,106,0.07); border-left:2px solid var(--green); margin-bottom:16px;">
                 Notion databases connected.
             </div>
             {% endif %}
+
+            <!-- Option toggle -->
+            <div style="display:flex; margin-bottom:16px; border:1px solid var(--border);">
+                <button type="button" class="option-tab active" id="tab-auto" onclick="switchTab('auto')"
+                    style="flex:1; padding:9px; font-family:var(--mono); font-size:0.75rem; border:none; cursor:pointer; letter-spacing:0.05em;">
+                    Auto-setup
+                </button>
+                <button type="button" class="option-tab" id="tab-manual" onclick="switchTab('manual')"
+                    style="flex:1; padding:9px; font-family:var(--mono); font-size:0.75rem; border:none; border-left:1px solid var(--border); cursor:pointer; letter-spacing:0.05em;">
+                    Manual setup
+                </button>
+            </div>
+
+            <!-- Auto-setup panel -->
+            <div id="panel-auto">
+                <div style="padding:16px; background:var(--surface); border:1px solid var(--border); margin-bottom:12px;">
+                    <div style="font-size:0.75rem; color:var(--text); margin-bottom:6px; font-weight:500;">How it works</div>
+                    <div style="font-size:0.75rem; color:var(--text-3); margin-bottom:10px; line-height:1.7;">
+                        FIH will automatically create all 4 Notion databases (Watchlist, Research Notes, Earnings Calendar, Daily Digest) inside a page you choose. You keep full ownership — the databases live in your workspace.
+                    </div>
+                    <div style="font-size:0.72rem; color:var(--text-3); margin-bottom:10px; line-height:1.7; padding:10px; background:var(--surface-2); border-left:2px solid var(--accent-dim);">
+                        <strong style="color:var(--text-2);">Before you start:</strong> create any page in Notion, open it, click <strong style="color:var(--text-2);">⋯ → Connections</strong> and add your integration. Then copy the page ID from the URL and paste it below. The page ID is the 32-character string at the end of the page URL.
+                    </div>
+                    <div style="font-size:0.72rem; color:var(--text-3); margin-bottom:14px; line-height:1.7; padding:10px; background:var(--surface-2); border-left:2px solid var(--red);">
+                        <strong style="color:var(--text-2);">Note:</strong> the Notion API does not support setting column order on creation. Your databases will have all the right columns but you may need to reorder them manually in Notion. If column order matters to you, use <strong style="color:var(--text-2);">Manual setup</strong> instead.
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="text" id="parent-page-id" placeholder="Notion parent page ID"
+                               style="flex:1; padding:8px 12px; background:var(--bg); border:1px solid var(--border); color:var(--text); font-family:var(--mono); font-size:0.8rem;">
+                        <button type="button" id="setup-btn" class="btn" style="width:auto; flex-shrink:0;"
+                            {% if not user.notion_api_key %}disabled title="Save your Notion API key first"{% endif %}>
+                            Set up Notion
+                        </button>
+                    </div>
+                </div>
+                <div id="setup-msg" style="display:none; font-size:0.78rem; margin-bottom:14px; padding:8px 10px; border-left:2px solid;"></div>
+            </div>
+
+            <!-- Manual panel -->
+            <div id="panel-manual" style="display:none;">
+                <div style="font-size:0.75rem; color:var(--text); margin-bottom:6px; font-weight:500;">How it works</div>
+                <div style="font-size:0.75rem; color:var(--text-3); margin-bottom:10px; line-height:1.7;">
+                    Duplicate our Notion template into your own workspace. You get the exact database structure FIH expects — with all columns, properties, and relations already configured.
+                </div>
+                <div style="font-size:0.72rem; color:var(--text-3); margin-bottom:14px; line-height:1.7; padding:10px; background:var(--surface-2); border-left:2px solid var(--accent-dim);">
+                    <strong style="color:var(--text-2);">Steps:</strong> open the template → click <strong style="color:var(--text-2);">Duplicate</strong> → open each database in your workspace → copy the ID from the URL (the 32-char string) → paste below. Also make sure each database is shared with your Notion integration.
+                </div>
+                <div style="margin-bottom:16px;">
+                    <a href="https://www.notion.so/Finance-intelligence-hub-32212ceb42dd8041897ac6439d740de3" target="_blank" style="font-size:0.78rem; font-weight:500; color:var(--accent); border:1px solid var(--accent-dim); padding:6px 14px; display:inline-block;">
+                        Open Notion Template →
+                    </a>
+                </div>
+                <div class="field-grid">
+                    <div class="key-field">
+                        <label>
+                            Watchlist
+                            <span class="key-status {{ 'set' if user.watchlist_db_id else 'unset' }}">
+                                {{ 'connected' if user.watchlist_db_id else 'not set' }}
+                            </span>
+                        </label>
+                        <input type="text" name="watchlist_db_id"
+                               value="{{ user.watchlist_db_id or '' }}"
+                               placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                    </div>
+                    <div class="key-field">
+                        <label>
+                            Research Notes
+                            <span class="key-status {{ 'set' if user.research_notes_db_id else 'unset' }}">
+                                {{ 'connected' if user.research_notes_db_id else 'not set' }}
+                            </span>
+                        </label>
+                        <input type="text" name="research_notes_db_id"
+                               value="{{ user.research_notes_db_id or '' }}"
+                               placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                    </div>
+                    <div class="key-field">
+                        <label>
+                            Earnings Calendar
+                            <span class="key-status {{ 'set' if user.earnings_calendar_db_id else 'unset' }}">
+                                {{ 'connected' if user.earnings_calendar_db_id else 'not set' }}
+                            </span>
+                        </label>
+                        <input type="text" name="earnings_calendar_db_id"
+                               value="{{ user.earnings_calendar_db_id or '' }}"
+                               placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                    </div>
+                    <div class="key-field">
+                        <label>
+                            Daily Digest
+                            <span class="key-status {{ 'set' if user.daily_digest_db_id else 'unset' }}">
+                                {{ 'connected' if user.daily_digest_db_id else 'not set' }}
+                            </span>
+                        </label>
+                        <input type="text" name="daily_digest_db_id"
+                               value="{{ user.daily_digest_db_id or '' }}"
+                               placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="submit-row">
@@ -216,7 +300,19 @@
     </form>
 </div>
 
+<style>
+    .option-tab { background: var(--surface-2); color: var(--text-2); }
+    .option-tab.active { background: var(--surface-3); color: var(--text); }
+    .option-tab:hover:not(.active) { background: var(--surface-3); color: var(--text); }
+</style>
 <script>
+    function switchTab(tab) {
+        document.getElementById('panel-auto').style.display   = tab === 'auto'   ? 'block' : 'none';
+        document.getElementById('panel-manual').style.display = tab === 'manual' ? 'block' : 'none';
+        document.getElementById('tab-auto').classList.toggle('active',   tab === 'auto');
+        document.getElementById('tab-manual').classList.toggle('active', tab === 'manual');
+    }
+
     const setupBtn = document.getElementById('setup-btn');
     const setupMsg = document.getElementById('setup-msg');
 

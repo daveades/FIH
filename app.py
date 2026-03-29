@@ -70,10 +70,10 @@ def dashboard():
 def settings():
     saved = False
     if request.method == "POST":
-        keys = {k: request.form.get(k, "").strip() for k in KEY_FIELDS}
-        # don't overwrite existing keys if the field was left blank
-        existing = {k: request.user[k] for k in KEY_FIELDS}
-        merged = {k: keys[k] if keys[k] else existing[k] for k in KEY_FIELDS}
+        all_fields = KEY_FIELDS + DB_ID_FIELDS
+        keys = {k: request.form.get(k, "").strip() for k in all_fields}
+        existing = {k: request.user[k] for k in all_fields}
+        merged = {k: keys[k] if keys[k] else existing[k] for k in all_fields}
         update_user_keys(request.user["id"], merged)
         request.user = get_user_by_id(request.user["id"])
         saved = True
